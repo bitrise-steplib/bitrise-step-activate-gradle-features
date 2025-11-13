@@ -1,0 +1,104 @@
+title: Activate Gradle Features
+summary: Activates Bitrise features for subsequent Gradle executions in the workflow
+description: |
+  This Step activates Bitrise's various features for subsequent Gradle executions in the workflow.
+
+  After this Step executes,
+  - enabling build-cache will result in: Gradle builds will automatically read from the remote cache and push new entries if it's enabled.
+  - enabling test distribution will result in: Tests will be distributed to Bitrise's remote worker pool.
+
+website: https://github.com/bitrise-steplib/bitrise-step-activate-gradle-features
+source_code_url: https://github.com/bitrise-steplib/bitrise-step-activate-gradle-features
+support_url: https://github.com/bitrise-steplib/bitrise-step-activate-gradle-features
+
+project_type_tags:
+- gradle
+type_tags:
+- utility
+
+run_if: .IsCI
+is_skippable: true
+
+toolkit:
+  go:
+    package_name: github.com/bitrise-steplib/bitrise-step-activate-gradle-features
+
+inputs:
+# -------------------------------------------------------------------------------
+# Gradle Build Cache
+# -------------------------------------------------------------------------------
+- build_cache_enabled: "true"
+  opts:
+    category: build cache
+    title: Enable
+    summary: Enables Gradle build cache for subsequent Gradle executions
+    is_required: true
+    value_options:
+    - "true"
+    - "false"
+    description: |-
+      Enables Gradle build cache for subsequent Gradle executions. When enabled, Gradle builds will automatically read from the remote cache and push new entries if it's enabled.
+
+- build_cache_push: "true"
+  opts:
+    category: build cache
+    title: Push new cache entries
+    summary: Whether the build can not only read, but write new entries to the remote cache
+    is_required: true
+    value_options:
+    - "true"
+    - "false"
+
+- build_cache_validation_level: warning
+  opts:
+    category: build cache
+    title: Validation level
+    is_required: true
+    value_options:
+    - none
+    - warning
+    - error
+    summary: Level of cache entry validation for both uploads and downloads.
+    description: |-
+      Level of cache entry validation for both uploads and downloads.
+
+      Levels:
+      - `none`: no validation.
+      - `warning`: print a warning about invalid cache entries, but don't interrupt the build
+      - `error`: print an error about invalid cache entries and interrupt the build
+
+# -------------------------------------------------------------------------------
+# Gradle Test Distribution
+# -------------------------------------------------------------------------------
+- test_distribution_enabled: "true"
+  opts:
+    category: test distribution
+    title: Enable
+    summary: Enables Gradle Test Distribution for subsequent Gradle executions
+    is_required: true
+    value_options:
+    - "true"
+    - "false"
+    description: |-
+      Enables Gradle Test Distribution for subsequent Gradle executions. When enabled, Gradle tests will automatically split their execution across multiple workers.
+- test_distribution_shard_size: 200
+  opts:
+    category: test distribution
+    title: Shard size
+    summary: Sets the number of tests per shard sent to the Bitrise remote worker pool.
+    is_required: true
+    description: |-
+      Sets the number of tests per shard sent to the Bitrise remote worker pool.
+
+# -------------------------------------------------------------------------------
+# Debugging
+# -------------------------------------------------------------------------------
+- verbose: "false"
+  opts:
+    category: debugging
+    title: Verbose logging
+    summary: Enable logging additional information for troubleshooting
+    is_required: true
+    value_options:
+    - "true"
+    - "false"
