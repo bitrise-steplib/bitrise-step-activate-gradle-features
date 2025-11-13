@@ -116,6 +116,16 @@ step_bundles:
         - content: |-
             #!/bin/bash
             set -ex
+            if [ "$BITRISE_ANALYTICS_DISABLED" == "true" ] && [ "$BUILD_CACHE_ENABLED" != "true" ] && [ "$TEST_DISTRIBUTION_ENABLED" != "true" ]
+            then
+              if [ ! -e "~/.gradle/init.d/bitrise-build-cache.init.gradle.kts" ]; then
+                exit 0
+              else
+                echo "File ~/.gradle/init.d/bitrise-build-cache.init.gradle.kts should not exist when all features are disabled"
+                exit 1
+              fi
+            fi
+
             echo "~/.gradle/init.d/bitrise-build-cache.init.gradle.kts content:"
             cat ~/.gradle/init.d/bitrise-build-cache.init.gradle.kts
 
