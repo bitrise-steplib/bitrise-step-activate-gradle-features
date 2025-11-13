@@ -26,7 +26,7 @@ workflows:
         inputs:
         - build_cache_enabled: true
         - build_cache_push: true
-        - build_cache_validation_level: "none"
+        - build_cache_validation_level: none
         - test_distribution_enabled: true
         - test_distribution_shard_size: 200
         - verbose: true
