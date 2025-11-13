@@ -81,7 +81,7 @@ inputs:
     - "false"
     description: |-
       Enables Gradle Test Distribution for subsequent Gradle executions. When enabled, Gradle tests will automatically split their execution across multiple workers.
-- test_distribution_shard_size: 200
+- test_distribution_shard_size: "200"
   opts:
     category: test distribution
     title: Shard size
