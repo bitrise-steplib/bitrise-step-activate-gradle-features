@@ -6,7 +6,6 @@ workflows:
     steps:
     - git::https://github.com/bitrise-steplib/steps-check.git:
         inputs:
-        - skip_go_checks: "yes"
         - workflow: lint
 
   e2e:
@@ -25,10 +24,9 @@ workflows:
     - path::./:
         run_if: true
         inputs:
-        - build_cache_enabled: "true"
-        - build_cache_push: "true"
+        - build_cache_enabled: true
+        - build_cache_push: true
         - build_cache_validation_level: "none"
-        - test_distribution_enabled: "true"
+        - test_distribution_enabled: true
         - test_distribution_shard_size: 200
-        - verbose: "true"
-
+        - verbose: true

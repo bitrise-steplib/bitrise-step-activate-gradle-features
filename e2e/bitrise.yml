@@ -17,9 +17,9 @@ workflows:
     - VERBOSE: "true"
     - BITRISE_ANALYTICS_DISABLED: "true"
     after_run:
-    - bundle::setup: {}
-    - bundle::run: {}
-    - bundle::check: {}
+    - bundle::setup: { }
+    - bundle::run: { }
+    - bundle::check: { }
 
   test_analytics:
     envs:
@@ -30,9 +30,9 @@ workflows:
     - TEST_DISTRIBUTION_SHARD_SIZE: "50"
     - VERBOSE: "true"
     after_run:
-    - bundle::setup: {}
-    - bundle::run: {}
-    - bundle::check: {}
+    - bundle::setup: { }
+    - bundle::run: { }
+    - bundle::check: { }
 
   test_cache:
     envs:
@@ -43,9 +43,9 @@ workflows:
     - TEST_DISTRIBUTION_SHARD_SIZE: "50"
     - VERBOSE: "true"
     after_run:
-    - bundle::setup: {}
-    - bundle::run: {}
-    - bundle::check: {}
+    - bundle::setup: { }
+    - bundle::run: { }
+    - bundle::check: { }
 
   test_test_distribution:
     envs:
@@ -56,9 +56,9 @@ workflows:
     - TEST_DISTRIBUTION_SHARD_SIZE: "50"
     - VERBOSE: "true"
     after_run:
-    - bundle::setup: {}
-    - bundle::run: {}
-    - bundle::check: {}
+    - bundle::setup: { }
+    - bundle::run: { }
+    - bundle::check: { }
 
   test_enable_all:
     envs:
@@ -69,9 +69,9 @@ workflows:
     - TEST_DISTRIBUTION_SHARD_SIZE: "50"
     - VERBOSE: "true"
     after_run:
-    - bundle::setup: {}
-    - bundle::run: {}
-    - bundle::check: {}
+    - bundle::setup: { }
+    - bundle::run: { }
+    - bundle::check: { }
 
 step_bundles:
   setup:
