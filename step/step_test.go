@@ -21,12 +21,12 @@ func Test_Step(t *testing.T) {
 		logger.On("Infof", step.GradleFeaturesActivatedMsg).Return().Once()
 
 		envRepo := NewMockEnvRepo()
-		envRepo.Set("build_cache_enabled", "true")
-		envRepo.Set("build_cache_push", "true")
-		envRepo.Set("build_cache_validation_level", "error")
-		envRepo.Set("BITRISEIO_BUILD_CACHE_ENABLED", "true")
-		envRepo.Set("test_distribution_enabled", "true")
-		envRepo.Set("test_distribution_shard_size", "50")
+		envRepo.Set("build_cache_enabled", "true")           //nolint: errcheck
+		envRepo.Set("build_cache_push", "true")              //nolint: errcheck
+		envRepo.Set("build_cache_validation_level", "error") //nolint: errcheck
+		envRepo.Set("BITRISEIO_BUILD_CACHE_ENABLED", "true") //nolint: errcheck
+		envRepo.Set("test_distribution_enabled", "true")     //nolint: errcheck
+		envRepo.Set("test_distribution_shard_size", "50")    //nolint: errcheck
 		envRepo.Set("verbose", "true")
 
 		command := &MockCommand{}
@@ -76,8 +76,8 @@ func Test_Step(t *testing.T) {
 
 	t.Run("No features enabled", func(t *testing.T) {
 		envRepo := NewMockEnvRepo()
-		envRepo.Set("verbose", "false")
-		envRepo.Set("BITRISE_ANALYTICS_DISABLED", "true")
+		envRepo.Set("verbose", "false")                   //nolint: errcheck
+		envRepo.Set("BITRISE_ANALYTICS_DISABLED", "true") //nolint: errcheck
 
 		logger := &utilsMocks.Logger{}
 		logger.On("EnableDebugLog", false).Return().Once()
@@ -102,9 +102,9 @@ func Test_Step(t *testing.T) {
 
 	t.Run("Failed to activate", func(t *testing.T) {
 		envRepo := NewMockEnvRepo()
-		envRepo.Set("test_distribution_enabled", "true")
-		envRepo.Set("test_distribution_shard_size", "50")
-		envRepo.Set("verbose", "false")
+		envRepo.Set("test_distribution_enabled", "true")  //nolint: errcheck
+		envRepo.Set("test_distribution_shard_size", "50") //nolint: errcheck
+		envRepo.Set("verbose", "false")                   //nolint: errcheck
 
 		logger := &utilsMocks.Logger{}
 		logger.On("EnableDebugLog", false).Return().Once()

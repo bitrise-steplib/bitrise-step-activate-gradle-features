@@ -12,25 +12,22 @@ import (
 )
 
 func Test_BuildCacheFeature(t *testing.T) {
-	makeLogger := func() *utilsMocks.Logger {
+	t.Run("Happy path", func(t *testing.T) {
+		envRepo := NewMockEnvRepo()
+		envRepo.Set("build_cache_enabled", "true")           //nolint: errcheck
+		envRepo.Set("build_cache_push", "true")              //nolint: errcheck
+		envRepo.Set("build_cache_validation_level", "error") //nolint: errcheck
+		envRepo.Set("BITRISEIO_BUILD_CACHE_ENABLED", "true") //nolint: errcheck
+
 		logger := &utilsMocks.Logger{}
 		logger.On("Debugf", mock.Anything, mock.Anything).Return()
 		logger.On("Errorf", mock.Anything, mock.Anything).Return()
 		logger.On("Infof", mock.Anything).Return()
-		return logger
-	}
-
-	t.Run("Happy path", func(t *testing.T) {
-		envRepo := NewMockEnvRepo()
-		envRepo.Set("build_cache_enabled", "true")
-		envRepo.Set("build_cache_push", "true")
-		envRepo.Set("build_cache_validation_level", "error")
-		envRepo.Set("BITRISEIO_BUILD_CACHE_ENABLED", "true")
 
 		actual := features.BuildCacheFeature(
 			stepconf.NewInputParser(envRepo),
 			envRepo,
-			makeLogger(),
+			logger,
 			func(annotation service.Annotation) error { return nil },
 		)
 
@@ -52,7 +49,7 @@ func Test_BuildCacheFeature(t *testing.T) {
 		actual := features.BuildCacheFeature(
 			stepconf.NewInputParser(envRepo),
 			envRepo,
-			makeLogger(),
+			logger,
 			func(annotation service.Annotation) error { return nil },
 		)
 
@@ -61,9 +58,9 @@ func Test_BuildCacheFeature(t *testing.T) {
 
 	t.Run("Disabled", func(t *testing.T) {
 		envRepo := NewMockEnvRepo()
-		envRepo.Set("build_cache_enabled", "false")
-		envRepo.Set("build_cache_push", "true")
-		envRepo.Set("build_cache_validation_level", "error")
+		envRepo.Set("build_cache_enabled", "false")          //nolint: errcheck
+		envRepo.Set("build_cache_push", "true")              //nolint: errcheck
+		envRepo.Set("build_cache_validation_level", "error") //nolint: errcheck
 
 		logger := &utilsMocks.Logger{}
 		logger.On("Debugf", features.BuildCacheCheckMsg).Return().Once()
@@ -72,7 +69,7 @@ func Test_BuildCacheFeature(t *testing.T) {
 		actual := features.BuildCacheFeature(
 			stepconf.NewInputParser(envRepo),
 			envRepo,
-			makeLogger(),
+			logger,
 			func(annotation service.Annotation) error { return nil },
 		)
 
@@ -81,9 +78,9 @@ func Test_BuildCacheFeature(t *testing.T) {
 
 	t.Run("Inactive", func(t *testing.T) {
 		envRepo := NewMockEnvRepo()
-		envRepo.Set("build_cache_enabled", "true")
-		envRepo.Set("build_cache_push", "true")
-		envRepo.Set("build_cache_validation_level", "error")
+		envRepo.Set("build_cache_enabled", "true")           //nolint: errcheck
+		envRepo.Set("build_cache_push", "true")              //nolint: errcheck
+		envRepo.Set("build_cache_validation_level", "error") //nolint: errcheck
 		// missing BITRISEIO_BUILD_CACHE_ENABLED
 
 		logger := &utilsMocks.Logger{}
@@ -93,7 +90,7 @@ func Test_BuildCacheFeature(t *testing.T) {
 		actual := features.BuildCacheFeature(
 			stepconf.NewInputParser(envRepo),
 			envRepo,
-			makeLogger(),
+			logger,
 			func(annotation service.Annotation) error { return nil },
 		)
 

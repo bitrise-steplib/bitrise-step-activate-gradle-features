@@ -11,23 +11,20 @@ import (
 )
 
 func Test_TestDistributionFeature(t *testing.T) {
-	makeLogger := func() *utilsMocks.Logger {
+	t.Run("Happy path", func(t *testing.T) {
+		envRepo := NewMockEnvRepo()
+		envRepo.Set("test_distribution_enabled", "true")  //nolint: errcheck
+		envRepo.Set("test_distribution_shard_size", "50") //nolint: errcheck
+
 		logger := &utilsMocks.Logger{}
 		logger.On("Debugf", mock.Anything, mock.Anything).Return()
 		logger.On("Errorf", mock.Anything, mock.Anything).Return()
 		logger.On("Infof", mock.Anything).Return()
-		return logger
-	}
-
-	t.Run("Happy path", func(t *testing.T) {
-		envRepo := NewMockEnvRepo()
-		envRepo.Set("test_distribution_enabled", "true")
-		envRepo.Set("test_distribution_shard_size", "50")
 
 		actual := features.TestDistributionFeature(
 			stepconf.NewInputParser(envRepo),
 			envRepo,
-			makeLogger(),
+			logger,
 		)
 
 		assert.Equal(t, features.TestDistribution{
@@ -47,7 +44,7 @@ func Test_TestDistributionFeature(t *testing.T) {
 		actual := features.TestDistributionFeature(
 			stepconf.NewInputParser(envRepo),
 			envRepo,
-			makeLogger(),
+			logger,
 		)
 
 		assert.Nil(t, actual)
@@ -55,8 +52,8 @@ func Test_TestDistributionFeature(t *testing.T) {
 
 	t.Run("Disabled", func(t *testing.T) {
 		envRepo := NewMockEnvRepo()
-		envRepo.Set("test_distribution_enabled", "false")
-		envRepo.Set("test_distribution_shard_size", "50")
+		envRepo.Set("test_distribution_enabled", "false") //nolint: errcheck
+		envRepo.Set("test_distribution_shard_size", "50") //nolint: errcheck
 
 		logger := &utilsMocks.Logger{}
 		logger.On("Debugf", features.TestDistributionCheckMsg).Return().Once()
@@ -65,7 +62,7 @@ func Test_TestDistributionFeature(t *testing.T) {
 		actual := features.TestDistributionFeature(
 			stepconf.NewInputParser(envRepo),
 			envRepo,
-			makeLogger(),
+			logger,
 		)
 
 		assert.Nil(t, actual)

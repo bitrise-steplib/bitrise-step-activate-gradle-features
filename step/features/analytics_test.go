@@ -28,7 +28,7 @@ func Test_AnalyticsFeature(t *testing.T) {
 		logger := &utilsMocks.Logger{}
 
 		envRepo := NewMockEnvRepo()
-		envRepo.Set("BITRISE_ANALYTICS_DISABLED", "true")
+		envRepo.Set("BITRISE_ANALYTICS_DISABLED", "true") //nolint: errcheck
 
 		actual := features.AnalyticsFeature(
 			envRepo,
