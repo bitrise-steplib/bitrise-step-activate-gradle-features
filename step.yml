@@ -12,7 +12,8 @@ source_code_url: https://github.com/bitrise-steplib/bitrise-step-activate-gradle
 support_url: https://github.com/bitrise-steplib/bitrise-step-activate-gradle-features
 
 project_type_tags:
-- gradle
+- android
+- kotlin-multiplatform
 type_tags:
 - utility
 
