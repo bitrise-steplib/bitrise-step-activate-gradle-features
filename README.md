@@ -2,16 +2,16 @@
 
 [![Step changelog](https://shields.io/github/v/release/bitrise-steplib/bitrise-step-activate-gradle-features?include_prereleases&label=changelog&color=blueviolet)](https://github.com/bitrise-steplib/bitrise-step-activate-gradle-features/releases)
 
-Activates Bitrise Gradle Features for subsequent Gradle builds in the workflow
+Activates Bitrise features for subsequent Gradle executions in the workflow
 
 <details>
 <summary>Description</summary>
 
-This Step activates Bitrise's various Gradle features such as Analytics, Build Cache, and Test Distribution for subsequent Gradle executions in the workflow.
+This Step activates Bitrise's various features for subsequent Gradle executions in the workflow.
 
-If Build Cache is enabled, after this Step executes, Gradle builds will automatically read from the remote cache and push new entries if it's enabled.
-
-If Test Distribution is enabled, after this Step executes, Gradle tests will automatically distribute tests in shards to dedicated remote worker pools.
+After this Step executes,
+- enabling build-cache will result in: Gradle builds will automatically read from the remote cache and push new entries if it's enabled.
+- enabling test distribution will result in: Tests will be distributed to Bitrise's remote worker pool.
 
 </details>
 
@@ -28,11 +28,11 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 
 | Key | Description | Flags | Default |
 | --- | --- | --- | --- |
-| `build_cache_enabled` | Enables Build Cache for subsequent Gradle invocations | required | `true` |
+| `build_cache_enabled` | Enables Gradle build cache for subsequent Gradle executions. When enabled, Gradle builds will automatically read from the remote cache and push new entries if it's enabled. | required | `true` |
 | `build_cache_push` | Whether the build can not only read, but write new entries to the remote cache | required | `true` |
 | `build_cache_validation_level` | Level of cache entry validation for both uploads and downloads.  Levels: - `none`: no validation. - `warning`: print a warning about invalid cache entries, but don't interrupt the build - `error`: print an error about invalid cache entries and interrupt the build | required | `warning` |
-| `test_distribution_enabled` | Enables Test Distribution for subsequent Gradle invocations | required | `true` |
-| `test_distribution_shard_size` | Tests per shard to be sent over to each worker | required | `true` |
+| `test_distribution_enabled` | Enables Gradle Test Distribution for subsequent Gradle executions. When enabled, Gradle tests will automatically split their execution across multiple workers. | required | `false` |
+| `test_distribution_shard_size` | Sets the number of tests per shard sent to the Bitrise remote worker pool. | required | `200` |
 | `verbose` | Enable logging additional information for troubleshooting | required | `false` |
 </details>
 
@@ -43,7 +43,7 @@ There are no outputs defined in this step
 
 ## 🙋 Contributing
 
-We welcome [pull requests](https://github.com/bitrise-steplib/bitrise-steplib/bitrise-step-activate-gradle-features/pulls) and [issues](https://github.com/bitrise-steplib/bitrise-steplib/bitrise-step-activate-gradle-features/issues) against this repository.
+We welcome [pull requests](https://github.com/bitrise-steplib/bitrise-step-activate-gradle-features/pulls) and [issues](https://github.com/bitrise-steplib/bitrise-step-activate-gradle-features/issues) against this repository.
 
 For pull requests, work on your changes in a forked repository and use the Bitrise CLI to [run step tests locally](https://docs.bitrise.io/en/bitrise-ci/bitrise-cli/running-your-first-local-build-with-the-cli.html).
 
