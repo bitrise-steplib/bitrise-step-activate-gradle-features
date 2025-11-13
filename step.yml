@@ -70,7 +70,7 @@ inputs:
 # -------------------------------------------------------------------------------
 # Gradle Test Distribution
 # -------------------------------------------------------------------------------
-- test_distribution_enabled: "true"
+- test_distribution_enabled: "false"
   opts:
     category: test distribution
     title: Enable

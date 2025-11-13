@@ -27,7 +27,7 @@ func Test_Step(t *testing.T) {
 		envRepo.Set("BITRISEIO_BUILD_CACHE_ENABLED", "true") //nolint: errcheck
 		envRepo.Set("test_distribution_enabled", "true")     //nolint: errcheck
 		envRepo.Set("test_distribution_shard_size", "50")    //nolint: errcheck
-		envRepo.Set("verbose", "true")
+		envRepo.Set("verbose", "true")                       //nolint: errcheck
 
 		command := &MockCommand{}
 
