@@ -16,7 +16,7 @@ workflows:
     - TEST_DISTRIBUTION_SHARD_SIZE: "50"
     - VERBOSE: "true"
     - BITRISE_ANALYTICS_DISABLED: "true"
-    after_run:
+    steps:
     - bundle::setup: { }
     - bundle::run: { }
     - bundle::check: { }
@@ -29,7 +29,7 @@ workflows:
     - TEST_DISTRIBUTION_ENABLED: "false"
     - TEST_DISTRIBUTION_SHARD_SIZE: "50"
     - VERBOSE: "true"
-    after_run:
+    steps:
     - bundle::setup: { }
     - bundle::run: { }
     - bundle::check: { }
@@ -42,7 +42,7 @@ workflows:
     - TEST_DISTRIBUTION_ENABLED: "false"
     - TEST_DISTRIBUTION_SHARD_SIZE: "50"
     - VERBOSE: "true"
-    after_run:
+    steps:
     - bundle::setup: { }
     - bundle::run: { }
     - bundle::check: { }
@@ -55,7 +55,7 @@ workflows:
     - TEST_DISTRIBUTION_ENABLED: "true"
     - TEST_DISTRIBUTION_SHARD_SIZE: "50"
     - VERBOSE: "true"
-    after_run:
+    steps:
     - bundle::setup: { }
     - bundle::run: { }
     - bundle::check: { }
@@ -68,7 +68,7 @@ workflows:
     - TEST_DISTRIBUTION_ENABLED: "true"
     - TEST_DISTRIBUTION_SHARD_SIZE: "50"
     - VERBOSE: "true"
-    after_run:
+    steps:
     - bundle::setup: { }
     - bundle::run: { }
     - bundle::check: { }
