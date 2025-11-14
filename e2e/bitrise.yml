@@ -1,0 +1,179 @@
+format_version: "11"
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+
+app:
+  envs:
+  - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-Android-Sample
+  - BRANCH: main
+
+workflows:
+  test_disable_all:
+    envs:
+    - BUILD_CACHE_ENABLED: "false"
+    - BUILD_CACHE_PUSH: "false"
+    - BUILD_CACHE_VALIDATION_LEVEL: none
+    - TEST_DISTRIBUTION_ENABLED: "false"
+    - TEST_DISTRIBUTION_SHARD_SIZE: "50"
+    - VERBOSE: "true"
+    - BITRISE_ANALYTICS_DISABLED: "true"
+    steps:
+    - bundle::setup: { }
+    - bundle::run: { }
+    - bundle::check: { }
+
+  test_analytics:
+    envs:
+    - BUILD_CACHE_ENABLED: "false"
+    - BUILD_CACHE_PUSH: "false"
+    - BUILD_CACHE_VALIDATION_LEVEL: none
+    - TEST_DISTRIBUTION_ENABLED: "false"
+    - TEST_DISTRIBUTION_SHARD_SIZE: "50"
+    - VERBOSE: "true"
+    steps:
+    - bundle::setup: { }
+    - bundle::run: { }
+    - bundle::check: { }
+
+  test_cache:
+    envs:
+    - BUILD_CACHE_ENABLED: "true"
+    - BUILD_CACHE_PUSH: "true"
+    - BUILD_CACHE_VALIDATION_LEVEL: warning
+    - TEST_DISTRIBUTION_ENABLED: "false"
+    - TEST_DISTRIBUTION_SHARD_SIZE: "50"
+    - VERBOSE: "true"
+    steps:
+    - bundle::setup: { }
+    - bundle::run: { }
+    - bundle::check: { }
+
+  test_test_distribution:
+    envs:
+    - BUILD_CACHE_ENABLED: "false"
+    - BUILD_CACHE_PUSH: "true"
+    - BUILD_CACHE_VALIDATION_LEVEL: warning
+    - TEST_DISTRIBUTION_ENABLED: "true"
+    - TEST_DISTRIBUTION_SHARD_SIZE: "50"
+    - VERBOSE: "true"
+    steps:
+    - bundle::setup: { }
+    - bundle::run: { }
+    - bundle::check: { }
+
+  test_enable_all:
+    envs:
+    - BUILD_CACHE_ENABLED: "true"
+    - BUILD_CACHE_PUSH: "true"
+    - BUILD_CACHE_VALIDATION_LEVEL: warning
+    - TEST_DISTRIBUTION_ENABLED: "true"
+    - TEST_DISTRIBUTION_SHARD_SIZE: "50"
+    - VERBOSE: "true"
+    steps:
+    - bundle::setup: { }
+    - bundle::run: { }
+    - bundle::check: { }
+
+step_bundles:
+  setup:
+    steps:
+    - script:
+        title: Delete _tmp dir
+        inputs:
+        - content: rm -rf _tmp
+    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
+        inputs:
+        - repository_url: $TEST_APP_URL
+        - clone_into_dir: ./_tmp
+        - branch: $BRANCH
+
+  run:
+    steps:
+    - path::./:
+        title: Execute step
+        run_if: "true"
+        is_skippable: false
+        inputs:
+        - build_cache_enabled: $BUILD_CACHE_ENABLED
+        - build_cache_push: $BUILD_CACHE_PUSH
+        - build_cache_validation_level: $BUILD_CACHE_VALIDATION_LEVEL
+        - test_distribution_enabled: $TEST_DISTRIBUTION_ENABLED
+        - test_distribution_shard_size: $TEST_DISTRIBUTION_SHARD_SIZE
+        - verbose: $VERBOSE
+    - change-workdir:
+        title: Switch working dir to _tmp
+        inputs:
+        - path: ./_tmp
+    - android-build:
+        inputs:
+        - module: app
+        - variant: debug
+
+  check:
+    steps:
+    - script:
+        title: Check if the step is working
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -ex
+
+            GRADLE_INIT_PATH="$HOME/.gradle/init.d/bitrise-build-cache.init.gradle.kts"
+
+            # If all features disabled, the file should not exist
+            if [ "$BITRISE_ANALYTICS_DISABLED" = "true" ] && [ "$BUILD_CACHE_ENABLED" != "true" ] && [ "$TEST_DISTRIBUTION_ENABLED" != "true" ]; then
+              if [ ! -e "$GRADLE_INIT_PATH" ]; then
+                exit 0
+              else
+                echo "File $GRADLE_INIT_PATH should not exist when all features are disabled"
+                exit 1
+              fi
+            fi
+
+            echo "$GRADLE_INIT_PATH content:"
+            cat "$GRADLE_INIT_PATH" || true
+
+            ALL_GOOD="true"
+            GRADLE_INIT="$GRADLE_INIT_PATH"
+
+            ANALYTICS_LINE='apply<io.bitrise.gradle.analytics.AnalyticsPlugin>()'
+            ANALYTICS_VERBOSE_LINE='debug.set(true)'
+
+            if [ "$BITRISE_ANALYTICS_DISABLED" != "true" ] && ! grep -qF -- "$ANALYTICS_LINE" "$GRADLE_INIT" 2>/dev/null; then
+              echo "Analytics were enabled but not found in gradle init"
+              ALL_GOOD="false"
+            fi
+
+            if [ "$BITRISE_ANALYTICS_DISABLED" != "true" ] && ! grep -qF -- "$ANALYTICS_VERBOSE_LINE" "$GRADLE_INIT" 2>/dev/null; then
+              echo "Verbose flag was set but the setting not found in gradle init"
+              ALL_GOOD="false"
+            fi
+
+            BUILD_CACHE_LINE='registerBuildCacheService(BitriseBuildCache::class.java, BitriseBuildCacheServiceFactory::class.java)'
+            BUILD_CACHE_VERBOSE_LINE='debug = true'
+
+            if [ "$BUILD_CACHE_ENABLED" = "true" ] && ! grep -qF -- "$BUILD_CACHE_LINE" "$GRADLE_INIT" 2>/dev/null; then
+              echo "Build cache was enabled but not found in gradle init"
+              ALL_GOOD="false"
+            fi
+
+            if [ "$BUILD_CACHE_ENABLED" = "true" ] && ! grep -qF -- "$BUILD_CACHE_VERBOSE_LINE" "$GRADLE_INIT" 2>/dev/null; then
+              echo "Verbose flag was set but the setting not found in gradle init"
+              ALL_GOOD="false"
+            fi
+
+            TEST_DISTRO_LINE='apply<io.bitrise.gradle.rbe.RBEPlugin>()'
+            TEST_DISTRO_VERBOSE_LINE='logLevel.set("debug")'
+
+            if [ "$TEST_DISTRIBUTION_ENABLED" = "true" ] && ! grep -qF -- "$TEST_DISTRO_LINE" "$GRADLE_INIT" 2>/dev/null; then
+              echo "Test distribution was enabled but not found in gradle init"
+              ALL_GOOD="false"
+            fi
+
+            if [ "$TEST_DISTRIBUTION_ENABLED" = "true" ] && ! grep -qF -- "$TEST_DISTRO_VERBOSE_LINE" "$GRADLE_INIT" 2>/dev/null; then
+              echo "Verbose flag was set but the setting not found in gradle init"
+              ALL_GOOD="false"
+            fi
+
+            if [ "$ALL_GOOD" != "true" ]; then
+              exit 1
+            fi
