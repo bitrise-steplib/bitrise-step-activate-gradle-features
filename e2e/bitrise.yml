@@ -133,23 +133,41 @@ step_bundles:
             GRADLE_INIT="~/.gradle/init.d/bitrise-build-cache.init.gradle.kts"
 
             ANALYTICS_LINE="apply<io.bitrise.gradle.analytics.AnalyticsPlugin>()"
-            if [ "$BITRISE_ANALYTICS_DISABLED" != "true" ] && [ ! grep -q "$ANALYTICS_LINE" "$GRADLE_INIT" ]
+            ANALYTICS_VERBOSE_LINE="debug.set(true)"
+            if [[ "$BITRISE_ANALYTICS_DISABLED" != "true" && ! grep -q "$ANALYTICS_LINE" "$GRADLE_INIT" ]]
             then
               echo "Analytics were enabled but not found in gradle init"
               ALL_GOOD="false"
             fi
+            if [[ "$BITRISE_ANALYTICS_DISABLED" != "true" && ! grep -q "$ANALYTICS_VERBOSE_LINE" "$GRADLE_INIT" ]]
+            then
+              echo "Verbose flag was set but the setting not found in gradle init"
+              ALL_GOOD="false"
+            fi
 
             BUILD_CACHE_LINE="registerBuildCacheService(BitriseBuildCache::class.java, BitriseBuildCacheServiceFactory::class.java)"
-            if [ "$BUILD_CACHE_ENABLED" == "true" ] && [ ! grep -q "$BUILD_CACHE_LINE" "$GRADLE_INIT" ]
+            BUILD_CACHE_VERBOSE_LINE="debug = true"
+            if [[ "$BUILD_CACHE_ENABLED" == "true" && ! grep -q "$BUILD_CACHE_LINE" "$GRADLE_INIT" ]]
             then
               echo "Build cache was enabled but not found in gradle init"
               ALL_GOOD="false"
             fi
+            if [[ "$BUILD_CACHE_ENABLED" == "true" && ! grep -q "$BUILD_CACHE_VERBOSE_LINE" "$GRADLE_INIT" ]]
+            then
+              echo "Verbose flag was set but the setting not found in gradle init"
+              ALL_GOOD="false"
+            fi
 
             TEST_DISTRO_LINE="apply<io.bitrise.gradle.rbe.RBEPlugin>()"
-            if [ "$TEST_DISTRIBUTION_ENABLED" == "true" ] && [ ! grep -q "$TEST_DISTRO_LINE" "$GRADLE_INIT" ]
+            TEST_DISTRO_VERBOSE_LINE="logLevel.set("verbose")"
+            if [[ "$TEST_DISTRIBUTION_ENABLED" == "true" && ! grep -q "$TEST_DISTRO_LINE" "$GRADLE_INIT" ]]
             then
               echo "Test distribution was enabled but not found in gradle init"
+              ALL_GOOD="false"
+            fi
+            if [[ "$TEST_DISTRIBUTION_ENABLED" == "true" && ! grep -q "$TEST_DISTRO_VERBOSE_LINE" "$GRADLE_INIT" ]]
+            then
+              echo "Verbose flag was set but the setting not found in gradle init"
               ALL_GOOD="false"
             fi
 
