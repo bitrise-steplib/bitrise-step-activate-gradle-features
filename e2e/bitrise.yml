@@ -162,7 +162,7 @@ step_bundles:
             fi
 
             TEST_DISTRO_LINE='apply<io.bitrise.gradle.rbe.RBEPlugin>()'
-            TEST_DISTRO_VERBOSE_LINE='logLevel.set("verbose")'
+            TEST_DISTRO_VERBOSE_LINE='logLevel.set("debug")'
 
             if [ "$TEST_DISTRIBUTION_ENABLED" = "true" ] && ! grep -qF -- "$TEST_DISTRO_LINE" "$GRADLE_INIT" 2>/dev/null; then
               echo "Test distribution was enabled but not found in gradle init"
