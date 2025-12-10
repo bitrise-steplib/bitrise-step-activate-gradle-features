@@ -3,8 +3,8 @@ default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-  - TEST_APP_URL: https://github.com/bitrise-io/Bitrise-Android-Sample
-  - BRANCH: main
+  - TEST_APP_URL: git@github.com:spacecowboy/Feeder.git
+  - BRANCH: master
 
 workflows:
   test_disable_all:
