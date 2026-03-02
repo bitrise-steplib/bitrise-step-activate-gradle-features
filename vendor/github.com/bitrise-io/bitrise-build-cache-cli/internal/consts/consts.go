@@ -12,11 +12,13 @@ const (
 
 	AnalyticsServiceEndpoint = "https://xcode-analytics.services.bitrise.io"
 
+	BitriseWebsiteBaseURL = "https://app.bitrise.io"
+
 	// Gradle Remote Build Cache related consts
 	GradleRemoteBuildCachePluginDepVersion = "1.2.28"
 
 	// Gradle Analytics related consts
-	GradleAnalyticsPluginDepVersion = "2.3.0"
+	GradleAnalyticsPluginDepVersion = "2.4.1"
 	GradleAnalyticsEndpoint         = "gradle-analytics.services.bitrise.io"
 	GradleAnalyticsPort             = 443
 	GradleAnalyticsHTTPEndpoint     = "https://gradle-sink.services.bitrise.io"
