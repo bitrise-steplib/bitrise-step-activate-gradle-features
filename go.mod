@@ -1,11 +1,11 @@
 module github.com/bitrise-steplib/bitrise-step-activate-gradle-features
 
-go 1.23.8
+go 1.24.0
 
 toolchain go1.24.10
 
 require (
-	github.com/bitrise-io/bitrise-build-cache-cli v1.0.42
+	github.com/bitrise-io/bitrise-build-cache-cli v1.4.0-alpha.4
 	github.com/bitrise-io/bitrise-plugins-annotations v0.0.0-20250424075238-a72af2229551
 	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.41
 	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.27
@@ -34,14 +34,13 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pkg/xattr v0.4.10 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/spf13/cobra v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/zeebo/blake3 v0.2.4 // indirect
-	golang.org/x/net v0.38.0 // indirect
-	golang.org/x/sys v0.34.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/net v0.50.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/text v0.34.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240822170219-fc7c04adadcd // indirect
 	google.golang.org/genproto/googleapis/bytestream v0.0.0-20240822170219-fc7c04adadcd // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240822170219-fc7c04adadcd // indirect
