@@ -7,8 +7,8 @@ github.com/bazelbuild/remote-apis/build/bazel/semver
 # github.com/beevik/etree v1.4.1
 ## explicit; go 1.21.0
 github.com/beevik/etree
-# github.com/bitrise-io/bitrise-build-cache-cli v1.0.42
-## explicit; go 1.23.8
+# github.com/bitrise-io/bitrise-build-cache-cli v1.5.2
+## explicit; go 1.24.0
 github.com/bitrise-io/bitrise-build-cache-cli/cmd/common
 github.com/bitrise-io/bitrise-build-cache-cli/cmd/gradle
 github.com/bitrise-io/bitrise-build-cache-cli/internal/build_cache/kv
@@ -16,6 +16,7 @@ github.com/bitrise-io/bitrise-build-cache-cli/internal/config/common
 github.com/bitrise-io/bitrise-build-cache-cli/internal/config/gradle
 github.com/bitrise-io/bitrise-build-cache-cli/internal/consts
 github.com/bitrise-io/bitrise-build-cache-cli/internal/diagnostics
+github.com/bitrise-io/bitrise-build-cache-cli/internal/envexport
 github.com/bitrise-io/bitrise-build-cache-cli/internal/filegroup
 github.com/bitrise-io/bitrise-build-cache-cli/internal/gradle
 github.com/bitrise-io/bitrise-build-cache-cli/internal/hash
@@ -108,8 +109,6 @@ github.com/pkg/xattr
 # github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 ## explicit
 github.com/pmezard/go-difflib/difflib
-# github.com/rogpeppe/go-internal v1.14.1
-## explicit; go 1.23
 # github.com/spf13/cobra v1.8.1
 ## explicit; go 1.15
 github.com/spf13/cobra
@@ -136,21 +135,22 @@ github.com/zeebo/blake3/internal/alg/hash/hash_avx2
 github.com/zeebo/blake3/internal/alg/hash/hash_pure
 github.com/zeebo/blake3/internal/consts
 github.com/zeebo/blake3/internal/utils
-# golang.org/x/net v0.38.0
-## explicit; go 1.23.0
+# golang.org/x/net v0.50.0
+## explicit; go 1.24.0
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/httpcommon
+golang.org/x/net/internal/httpsfv
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sys v0.34.0
-## explicit; go 1.23.0
+# golang.org/x/sys v0.41.0
+## explicit; go 1.24.0
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.23.0
-## explicit; go 1.23.0
+# golang.org/x/text v0.34.0
+## explicit; go 1.24.0
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
