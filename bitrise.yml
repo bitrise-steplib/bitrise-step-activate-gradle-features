@@ -9,6 +9,9 @@ workflows:
         - workflow: lint
 
   e2e:
+    meta:
+      bitrise.io:
+        machine_region: region-us
     steps:
     - git::https://github.com/bitrise-steplib/steps-check.git:
         inputs:
