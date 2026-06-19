@@ -1,8 +1,8 @@
 module github.com/bitrise-steplib/bitrise-step-activate-gradle-features
 
-go 1.24.0
+go 1.25.0
 
-toolchain go1.24.10
+toolchain go1.25.2
 
 require (
 	github.com/bitrise-io/bitrise-build-cache-cli/v2 v2.8.4

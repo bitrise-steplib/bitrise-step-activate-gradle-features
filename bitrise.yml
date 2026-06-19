@@ -6,7 +6,7 @@ workflows:
     steps:
     - git::https://github.com/bitrise-steplib/steps-check.git:
         inputs:
-        - workflow: lint
+        - workflow: check
 
   e2e:
     steps:
