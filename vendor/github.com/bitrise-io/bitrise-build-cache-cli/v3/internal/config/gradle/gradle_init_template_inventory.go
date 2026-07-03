@@ -1,0 +1,75 @@
+package gradleconfig
+
+type UsageLevel string
+
+//nolint:gochecknoglobals
+var (
+	UsageLevelNone       UsageLevel = "none"
+	UsageLevelDependency UsageLevel = "dependency"
+	UsageLevelEnabled    UsageLevel = "enabled"
+)
+
+type CacheTemplateInventory struct {
+	Usage               UsageLevel
+	Version             string
+	EndpointURLWithPort string
+	IsPushEnabled       bool
+	ValidationLevel     string
+}
+
+type AnalyticsTemplateInventory struct {
+	Usage        UsageLevel
+	Version      string
+	Endpoint     string
+	Port         int
+	HTTPEndpoint string
+	GRPCEndpoint string
+}
+
+type TestDistroTemplateInventory struct {
+	Usage           UsageLevel
+	Version         string
+	Endpoint        string
+	KvEndpoint      string
+	Port            int
+	LogLevel        string
+	ShardSize       int
+	TestSearchDepth int
+}
+
+type PluginCommonTemplateInventory struct {
+	AuthToken  string
+	Debug      bool
+	AppSlug    string
+	CIProvider string
+	Version    string
+
+	CLIPath string
+}
+
+type TemplateInventory struct {
+	Common     PluginCommonTemplateInventory
+	Cache      CacheTemplateInventory
+	Analytics  AnalyticsTemplateInventory
+	TestDistro TestDistroTemplateInventory
+	// GradlePluginsMirrorURL is the Bitrise-hosted mirror URL proxying
+	// https://plugins.gradle.org/m2/, or "" when the mirror is disabled.
+	// Used in the initscript repo list so io.bitrise.gradle:* artifacts
+	// resolve through the mirror instead of plugins.gradle.org's redirect
+	// chain to apache (which can 429-rate-limit).
+	GradlePluginsMirrorURL string
+}
+
+func (inventory TemplateInventory) HasDependencies() bool {
+	if inventory.Analytics.Usage == UsageLevelDependency || inventory.Analytics.Usage == UsageLevelEnabled {
+		return true
+	}
+	if inventory.Cache.Usage == UsageLevelDependency || inventory.Cache.Usage == UsageLevelEnabled {
+		return true
+	}
+	if inventory.TestDistro.Usage == UsageLevelDependency || inventory.TestDistro.Usage == UsageLevelEnabled {
+		return true
+	}
+
+	return false
+}

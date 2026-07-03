@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	CLI "github.com/bitrise-io/bitrise-build-cache-cli/v2/cmd/common"
-	gradleCLI "github.com/bitrise-io/bitrise-build-cache-cli/v2/cmd/gradle"
+	CLI "github.com/bitrise-io/bitrise-build-cache-cli/v3/cmd/common"
+	gradleCLI "github.com/bitrise-io/bitrise-build-cache-cli/v3/cmd/gradle"
 	"github.com/bitrise-io/bitrise-plugins-annotations/service"
 	"github.com/bitrise-io/go-steputils/v2/stepconf"
 	"github.com/bitrise-io/go-utils/v2/env"
