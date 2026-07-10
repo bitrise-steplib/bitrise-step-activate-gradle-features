@@ -13,12 +13,13 @@ github.com/bazelbuild/remote-apis/build/bazel/semver
 # github.com/beevik/etree v1.6.0
 ## explicit; go 1.23.0
 github.com/beevik/etree
-# github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.0.2
+# github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.1.0
 ## explicit; go 1.25.0
 github.com/bitrise-io/bitrise-build-cache-cli/v3/cmd/common
 github.com/bitrise-io/bitrise-build-cache-cli/v3/cmd/gradle
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/analytics/multiplatform
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth/keychain
+github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth/store
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/authprompt
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/bitriseapi
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/build_cache/kv
