@@ -2,12 +2,11 @@ package ccache
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/bitrise-io/go-utils/v2/log"
 
-	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth/keychain"
+	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth/store"
 	ccacheconfig "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/ccache"
 	configcommon "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/common"
 	multiplatformconfig "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/multiplatform"
@@ -117,18 +116,7 @@ func (a *Activator) Activate(ctx context.Context) error {
 	}
 
 	mpCfg := multiplatformconfig.Config{DebugLogging: a.debugLogging}
-	keychainErr := errors.New("skip-jwt")
-	if !config.AuthConfig.IsJWT {
-		keychainErr = keychain.New().Save(keychain.Credentials{
-			AuthToken:   config.AuthConfig.AuthToken,
-			WorkspaceID: config.AuthConfig.WorkspaceID,
-		})
-	}
-	if keychainErr != nil {
-		mpCfg.AuthConfig = config.AuthConfig
-	} else {
-		a.logger.Infof("Saved auth credentials to the OS keychain")
-	}
+	store.PersistActivateCreds(a.logger, a.envs, config.AuthConfig, &mpCfg)
 	if err := mpCfg.Save(a.osProxy, a.encoderFactory); err != nil {
 		return fmt.Errorf("failed to save multiplatform analytics config: %w", err)
 	}

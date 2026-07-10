@@ -3,7 +3,6 @@ package xcelerate
 import (
 	"cmp"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -13,7 +12,7 @@ import (
 	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/shirou/gopsutil/v4/process"
 
-	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth/keychain"
+	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth/store"
 	configcommon "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/common"
 	multiplatformconfig "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/multiplatform"
 	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/consts"
@@ -91,18 +90,7 @@ func Activate(
 	}
 
 	mpCfg := multiplatformconfig.Config{DebugLogging: config.DebugLogging}
-	keychainErr := errors.New("skip-jwt")
-	if !config.AuthConfig.IsJWT {
-		keychainErr = keychain.New().Save(keychain.Credentials{
-			AuthToken:   config.AuthConfig.AuthToken,
-			WorkspaceID: config.AuthConfig.WorkspaceID,
-		})
-	}
-	if keychainErr != nil {
-		mpCfg.AuthConfig = config.AuthConfig
-	} else {
-		logger.Infof("Saved auth credentials to the OS keychain")
-	}
+	store.PersistActivateCreds(logger, envs, config.AuthConfig, &mpCfg)
 	if err := mpCfg.Save(osProxy, encoderFactory); err != nil {
 		return fmt.Errorf("failed to save multiplatform analytics config: %w", err)
 	}
