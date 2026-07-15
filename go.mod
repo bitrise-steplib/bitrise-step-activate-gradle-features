@@ -3,7 +3,7 @@ module github.com/bitrise-steplib/bitrise-step-activate-gradle-features
 go 1.25.0
 
 require (
-	github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.1.2
+	github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.1.3
 	github.com/bitrise-io/bitrise-plugins-annotations v0.0.0-20250424075238-a72af2229551
 	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.50
 	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.34
