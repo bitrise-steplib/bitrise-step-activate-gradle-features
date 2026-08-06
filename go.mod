@@ -3,7 +3,7 @@ module github.com/bitrise-steplib/bitrise-step-activate-gradle-features
 go 1.25.8
 
 require (
-	github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.4.3
+	github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.4.4
 	github.com/bitrise-io/bitrise-plugins-annotations v0.0.0-20250424075238-a72af2229551
 	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.50
 	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.36
@@ -24,6 +24,7 @@ require (
 	github.com/ebitengine/purego v0.10.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/godbus/dbus/v5 v5.2.2 // indirect
+	github.com/gofrs/flock v0.13.0 // indirect
 	github.com/gofrs/uuid/v5 v5.4.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -31,7 +32,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/klauspost/compress v1.17.8 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.12 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pkg/xattr v0.4.12 // indirect
