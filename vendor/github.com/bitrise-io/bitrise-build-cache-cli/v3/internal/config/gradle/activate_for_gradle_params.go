@@ -7,6 +7,8 @@ import (
 
 	"github.com/bitrise-io/go-utils/v2/log"
 
+	authpkg "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth"
+	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth/live"
 	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/common"
 	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/consts"
 	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/envexport"
@@ -70,22 +72,33 @@ func DefaultActivateGradleParams() ActivateGradleParams {
 	}
 }
 
+func NormalizeParams(params *ActivateGradleParams) {
+	if params.Cache.PushEnabled {
+		params.Cache.Enabled = true
+	}
+}
+
 func (params ActivateGradleParams) TemplateInventory(
 	logger log.Logger,
 	envs map[string]string,
 	isDebug bool,
 	benchmarkProvider common.BenchmarkPhaseProvider,
 ) (TemplateInventory, error) {
+	NormalizeParams(&params)
+
 	logger.Infof("(i) Checking parameters")
 
 	// Read auth config and metadata upfront
 	logger.Infof("(i) Check Auth Config")
-	authConfig, _, err := common.ResolveAuthConfig(envs)
+	resolver := live.Default(nil)
+
+	authConfig, authOrigin, err := resolver.ResolveNoRefresh(envs)
 	if err != nil {
 		return TemplateInventory{}, fmt.Errorf(ErrFmtReadAuthConfig, err)
 	}
 
-	metadata := common.NewMetadata(envs,
+	username, _ := resolver.ResolveUsername(envs)
+	metadata := common.NewMetadata(envs, username,
 		func(name string, v ...string) (string, error) {
 			output, err := exec.Command(name, v...).Output() //nolint:noctx
 
@@ -100,7 +113,7 @@ func (params ActivateGradleParams) TemplateInventory(
 		ApplyBenchmarkPhase(&params, logger, benchmarkProvider, metadata, envexport.New(envs, logger))
 	}
 
-	commonInventory := params.commonTemplateInventory(authConfig, metadata, isDebug)
+	commonInventory := params.commonTemplateInventory(authConfig, authOrigin, metadata, isDebug)
 
 	cacheInventory, err := params.cacheTemplateInventory(logger, envs)
 	if err != nil {
@@ -121,7 +134,8 @@ func (params ActivateGradleParams) TemplateInventory(
 }
 
 func (params ActivateGradleParams) commonTemplateInventory(
-	authConfig common.CacheAuthConfig,
+	authConfig authpkg.Credential,
+	authOrigin authpkg.Origin,
 	metadata common.CacheConfigMetadata,
 	isDebug bool,
 ) PluginCommonTemplateInventory {
@@ -131,7 +145,7 @@ func (params ActivateGradleParams) commonTemplateInventory(
 	}
 
 	return PluginCommonTemplateInventory{
-		AuthToken:  authConfig.TokenInGradleFormat(),
+		AuthToken:  authpkg.GradleToken(authConfig, authOrigin),
 		Debug:      isDebug,
 		AppSlug:    metadata.BitriseAppID,
 		CIProvider: metadata.CIProvider,
