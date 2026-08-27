@@ -7,7 +7,7 @@ github.com/bazelbuild/remote-apis/build/bazel/semver
 # github.com/beevik/etree v1.7.0
 ## explicit; go 1.23.0
 github.com/beevik/etree
-# github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.6.2
+# github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.6.3
 ## explicit; go 1.25.8
 github.com/bitrise-io/bitrise-build-cache-cli/v3/cmd/common
 github.com/bitrise-io/bitrise-build-cache-cli/v3/cmd/gradle
@@ -18,7 +18,9 @@ github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth/live
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth/oauth
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth/store
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/build_cache/kv
+github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/ccache
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/ccache/analytics
+github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/ccache/protocol
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/clibin
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/bazel
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/ccache
@@ -29,6 +31,7 @@ github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/multiplatform
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/reactnative
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/xcelerate
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/consts
+github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/daemon
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/diagnostics
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/envexport
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/exec
