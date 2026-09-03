@@ -1,0 +1,376 @@
+// Package reactnative provides a public API for the React Native build cache
+// commands of bitrise-build-cache-cli.
+package reactnative
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/bitrise-io/go-utils/v2/log"
+
+	authpkg "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth"
+	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth/live"
+	configcommon "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/common"
+	gradleconfig "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/gradle"
+	multiplatformconfig "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/multiplatform"
+	rnconfig "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/reactnative"
+	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/xcelerate"
+	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/dependencies"
+	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/envexport"
+	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/paths"
+	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/utils"
+	ccachepkg "github.com/bitrise-io/bitrise-build-cache-cli/v3/pkg/ccache"
+)
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+// ActivatorParams holds the activation flags.
+type ActivatorParams struct {
+	GradleEnabled        bool
+	XcodeEnabled         bool
+	CppEnabled           bool
+	PushEnabled          bool
+	DisablePrefixMapping bool
+	NoSwiftCache         bool
+	BuildCacheSkipFlags  bool
+	DebugLogging         bool
+
+	// Logger overrides the default logger. If nil, a default logger is created.
+	Logger log.Logger
+}
+
+// Activator orchestrates Bitrise Build Cache activation for React Native.
+type Activator struct {
+	gradle       *gradleActivator
+	xcode        *xcodeActivator
+	cpp          *ccachepkg.Activator
+	debugLogging bool
+	logger       log.Logger
+}
+
+// NewActivator creates an Activator with production defaults.
+func NewActivator(params ActivatorParams) *Activator {
+	logger := params.Logger
+	if logger == nil {
+		logger = log.NewLogger(log.WithDebugLog(params.DebugLogging))
+	}
+
+	a := &Activator{
+		debugLogging: params.DebugLogging,
+		logger:       logger,
+	}
+
+	if params.GradleEnabled {
+		a.gradle = &gradleActivator{
+			logger:       logger,
+			debugLogging: params.DebugLogging,
+			pushEnabled:  params.PushEnabled,
+		}
+	}
+
+	if params.XcodeEnabled {
+		a.xcode = &xcodeActivator{
+			logger:               logger,
+			debugLogging:         params.DebugLogging,
+			pushEnabled:          params.PushEnabled,
+			disablePrefixMapping: params.DisablePrefixMapping,
+			noSwiftCache:         params.NoSwiftCache,
+			buildCacheSkipFlags:  params.BuildCacheSkipFlags,
+		}
+	}
+
+	// ccache only meaningfully wraps the Android/Gradle native build path in
+	// React Native projects — without Gradle activated there is nothing for
+	// ccache to accelerate here. Tie the two together so `--cpp=true
+	// --gradle=false` doesn't leave a stray ccache helper running.
+	if params.CppEnabled && params.GradleEnabled {
+		a.cpp = ccachepkg.NewActivator(ccachepkg.ActivatorParams{
+			PushEnabled:  params.PushEnabled,
+			DebugLogging: params.DebugLogging,
+			Logger:       logger,
+		})
+	} else if params.CppEnabled && !params.GradleEnabled {
+		logger.Infof("(i) Skipping C++ (ccache) activation: Gradle is disabled — ccache only wraps the Android/Gradle native build path.")
+	}
+
+	return a
+}
+
+// Activate runs the full React Native build cache activation flow: install
+// dependencies, activate each sub-system,
+// save config.
+func (a *Activator) Activate(ctx context.Context) error {
+	configcommon.LogCLIVersion(a.logger)
+	a.logger.TInfof("Activate Bitrise Build Cache for React Native")
+
+	if err := installDeps(ctx, a.logger, a.cpp != nil); err != nil {
+		return fmt.Errorf("install dependencies: %w", err)
+	}
+
+	exportInstallDirToPath(a.logger) //nolint:contextcheck // envman export inside is fire-and-forget
+
+	if a.gradle != nil {
+		a.logger.TInfof("Activating Gradle build cache...")
+
+		if err := a.gradle.activate(); err != nil {
+			return fmt.Errorf("activate Gradle build cache: %w", err)
+		}
+	}
+
+	if a.xcode != nil {
+		a.logger.TInfof("Activating Xcode build cache...")
+
+		if err := a.xcode.activate(ctx); err != nil {
+			return fmt.Errorf("activate Xcode build cache: %w", err)
+		}
+	}
+
+	if err := a.activateCppIfApplicable(ctx); err != nil {
+		return err
+	}
+
+	if err := a.Finalize(ctx); err != nil {
+		return err
+	}
+
+	// Single consolidated benchmark phase summary across whichever sub-tools
+	// were activated. Per-tool baseline warnings used to fire individually
+	// from each ApplyBenchmarkPhase call, which made multi-tool RN runs look
+	// like the whole build was in baseline even when only the *unused* tool
+	// was (the relevant tool was caching normally).
+	tools := []string{}
+	if a.gradle != nil {
+		tools = append(tools, configcommon.BuildToolGradle)
+	}
+	if a.xcode != nil {
+		tools = append(tools, configcommon.BuildToolXcode)
+	}
+	configcommon.LogBenchmarkSummary(a.logger, tools)
+
+	a.logger.TInfof("✅ Bitrise Build Cache for React Native activated")
+
+	return nil
+}
+
+// activateCppIfApplicable activates ccache when it was wired in NewActivator
+// and gradle isn't in the benchmark baseline phase. Skipping on baseline is a
+// stop-gap until ccache grows its own benchmark phase (ACI-4926).
+func (a *Activator) activateCppIfApplicable(ctx context.Context) error {
+	if a.cpp == nil {
+		return nil
+	}
+
+	gradlePhase := configcommon.ReadBenchmarkPhaseFile(configcommon.BuildToolGradle, a.logger)
+	if gradlePhase == configcommon.BenchmarkPhaseBaseline {
+		a.logger.Infof("(i) Skipping C++ (ccache) activation: Gradle is in benchmark baseline mode.")
+
+		return nil
+	}
+
+	a.logger.TInfof("Activating C++ build cache...")
+
+	if err := a.cpp.Activate(ctx); err != nil {
+		return fmt.Errorf("activate C++ build cache: %w", err)
+	}
+
+	return nil
+}
+
+// exportEASWorkingDirIfCI pins EAS Build's working directory on CI so that
+// `eas build --local` (Expo's local-build flow) reuses the same path across
+// runs. Without a stable path, every cache that hashes absolute paths
+// (Gradle, Xcode, ccache) misses. We only set it on CI — on a developer
+// machine the Runner injects it on demand when it sees an `eas build`
+// invocation, so we don't pollute the user's shell environment with an env
+// var they may not need.
+//
+// An explicit user-supplied value always wins.
+func (a *Activator) exportEASWorkingDirIfCI() {
+	envs := utils.AllEnvs()
+	if configcommon.DetectCIProvider(envs) == "" {
+		return
+	}
+
+	if existing := envs[EASWorkingDirEnv]; existing != "" {
+		a.logger.Debugf("%s already set to %q — leaving it alone", EASWorkingDirEnv, existing)
+
+		return
+	}
+
+	workdir := DefaultEASWorkingDir(envs)
+	envexport.New(envs, a.logger).Export(EASWorkingDirEnv, workdir)
+	a.logger.TInfof("Exported %s=%s for EAS Build cache stability", EASWorkingDirEnv, workdir)
+}
+
+func (a *Activator) Finalize(ctx context.Context) error {
+	a.exportEASWorkingDirIfCI() //nolint:contextcheck // envman export inside is fire-and-forget
+
+	if err := saveMultiplatformConfig(ctx, utils.AllEnvs(), a.debugLogging); err != nil {
+		return err
+	}
+
+	return a.saveReactNativeMarker()
+}
+
+// saveReactNativeMarker writes ~/.bitrise/cache/reactnative/config.json to
+// signal that RN build cache is active. The marker is what `status
+// --feature=react-native` and external step integrations read to decide
+// whether to wrap build commands with `react-native run --`.
+func (a *Activator) saveReactNativeMarker() error {
+	cfg := rnconfig.Config{Enabled: true}
+
+	if err := cfg.Save(a.logger, utils.DefaultOsProxy{}, utils.DefaultEncoderFactory{}); err != nil {
+		return fmt.Errorf("save react-native marker: %w", err)
+	}
+
+	return nil
+}
+
+// ---------------------------------------------------------------------------
+// Private — sub-system activation
+// ---------------------------------------------------------------------------
+
+func exportInstallDirToPath(logger log.Logger) {
+	dir := dependencies.InstallDir
+	envs := utils.AllEnvs()
+
+	currentPath := envs["PATH"]
+	if strings.Contains(string(os.PathListSeparator)+currentPath+string(os.PathListSeparator), string(os.PathListSeparator)+dir+string(os.PathListSeparator)) {
+		return
+	}
+
+	newPath := dir + ":" + currentPath
+	exporter := envexport.New(envs, logger)
+	exporter.Export("PATH", newPath)
+
+	logger.TInfof("Added %s to PATH", dir)
+}
+
+func installDeps(ctx context.Context, logger log.Logger, doCpp bool) error {
+	var tools []dependencies.Tool
+
+	cliTool, err := dependencies.CLITool()
+	if err != nil {
+		return fmt.Errorf("determine CLI tool: %w", err)
+	}
+
+	tools = append(tools, cliTool)
+
+	if doCpp {
+		tools = append(tools, dependencies.CcacheTool())
+	}
+
+	if err := dependencies.EnsureAll(ctx, tools, logger); err != nil {
+		return fmt.Errorf("ensure dependencies: %w", err)
+	}
+
+	return nil
+}
+
+type gradleActivator struct {
+	logger       log.Logger
+	debugLogging bool
+	pushEnabled  bool
+}
+
+func (g *gradleActivator) activate() error {
+	allEnvs := utils.AllEnvs()
+
+	p, err := paths.Default()
+	if err != nil {
+		return fmt.Errorf("resolve home dir: %w", err)
+	}
+
+	gradleHome := p.GradleHome(allEnvs[paths.GradleUserHomeEnvKey])
+
+	gradleParams := gradleconfig.DefaultActivateGradleParams()
+	gradleParams.Cache.Enabled = true
+	gradleParams.Cache.PushEnabled = g.pushEnabled
+
+	if err := gradleconfig.Activate(
+		g.logger,
+		gradleHome,
+		allEnvs,
+		g.debugLogging,
+		gradleParams.TemplateInventory,
+		func(inventory gradleconfig.TemplateInventory, path string) error {
+			return inventory.WriteToGradleInit(
+				g.logger,
+				path,
+				utils.DefaultOsProxy{},
+				gradleconfig.GradleTemplateProxy(),
+			)
+		},
+		gradleconfig.DefaultGradlePropertiesUpdater(),
+		gradleParams,
+	); err != nil {
+		return fmt.Errorf("gradle activation: %w", err)
+	}
+
+	return nil
+}
+
+type xcodeActivator struct {
+	logger               log.Logger
+	debugLogging         bool
+	pushEnabled          bool
+	disablePrefixMapping bool
+	noSwiftCache         bool
+	buildCacheSkipFlags  bool
+}
+
+func (x *xcodeActivator) activate(ctx context.Context) error {
+	xcodeParams := xcelerate.DefaultParams()
+	xcodeParams.DebugLogging = x.debugLogging
+	xcodeParams.PushEnabled = x.pushEnabled
+	xcodeParams.DisablePrefixMapping = x.disablePrefixMapping
+	xcodeParams.NoSwiftCache = x.noSwiftCache
+	xcodeParams.BuildCacheSkipFlags = x.buildCacheSkipFlags
+
+	if err := xcelerate.Activate(
+		ctx,
+		x.logger,
+		utils.DefaultOsProxy{},
+		utils.DefaultCommandFunc(),
+		utils.DefaultEncoderFactory{},
+		utils.DefaultDecoderFactory{},
+		xcodeParams,
+		utils.AllEnvs(),
+	); err != nil {
+		return fmt.Errorf("xcode activation: %w", err)
+	}
+
+	return nil
+}
+
+func saveMultiplatformConfig(ctx context.Context, envs map[string]string, debugLogging bool) error {
+	// ResolvePinned materialises an env- or JWT-sourced credential so the post-run
+	// hook and the storage helper can find it without those env vars.
+	cred, origin, err := live.Default(nil).ResolvePinned(ctx, envs, configcommon.DetectCIProvider(envs) != "")
+	if err != nil {
+		return fmt.Errorf("resolve auth config for multiplatform analytics: %w", err)
+	}
+
+	// The analytics authConfig block is mirrored whichever backend the credential
+	// lives in: the React Native post-run hook reads it directly, and on a machine
+	// with a working keychain nothing else would write it.
+	if err := multiplatformconfig.Update(
+		utils.DefaultOsProxy{}, utils.DefaultEncoderFactory{}, utils.DefaultDecoderFactory{},
+		func(cfg *multiplatformconfig.Config) {
+			cfg.DebugLogging = debugLogging
+			cfg.AuthConfig = multiplatformconfig.AnalyticsAuthConfig{
+				AuthToken:   cred.Token,
+				WorkspaceID: cred.WorkspaceID,
+				IsJWT:       origin.Backend == authpkg.BackendJWT,
+			}
+		},
+	); err != nil {
+		return fmt.Errorf("save multiplatform analytics config: %w", err)
+	}
+
+	return nil
+}
