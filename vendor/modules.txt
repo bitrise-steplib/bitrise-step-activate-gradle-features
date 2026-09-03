@@ -1,13 +1,40 @@
+# charm.land/bubbles/v2 v2.0.0
+## explicit; go 1.24.2
+charm.land/bubbles/v2/cursor
+charm.land/bubbles/v2/filepicker
+charm.land/bubbles/v2/help
+charm.land/bubbles/v2/internal/memoization
+charm.land/bubbles/v2/internal/runeutil
+charm.land/bubbles/v2/key
+charm.land/bubbles/v2/spinner
+charm.land/bubbles/v2/textarea
+charm.land/bubbles/v2/textinput
+charm.land/bubbles/v2/viewport
+# charm.land/bubbletea/v2 v2.0.2
+## explicit; go 1.24.2
+charm.land/bubbletea/v2
+# charm.land/huh/v2 v2.0.3
+## explicit; go 1.25.8
+charm.land/huh/v2
+charm.land/huh/v2/internal/accessibility
+charm.land/huh/v2/internal/compat
+charm.land/huh/v2/internal/selector
+# charm.land/lipgloss/v2 v2.0.1
+## explicit; go 1.25.0
+charm.land/lipgloss/v2
 # cloud.google.com/go/longrunning v1.2.0
 ## explicit; go 1.25.0
 cloud.google.com/go/longrunning/autogen/longrunningpb
+# github.com/atotto/clipboard v0.1.4
+## explicit
+github.com/atotto/clipboard
 # github.com/bazelbuild/remote-apis v0.0.0-20260331222004-becdd8f9ff81
 ## explicit; go 1.24.0
 github.com/bazelbuild/remote-apis/build/bazel/semver
 # github.com/beevik/etree v1.7.0
 ## explicit; go 1.23.0
 github.com/beevik/etree
-# github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.6.9
+# github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.8.0
 ## explicit; go 1.25.8
 github.com/bitrise-io/bitrise-build-cache-cli/v3/cmd/common
 github.com/bitrise-io/bitrise-build-cache-cli/v3/cmd/gradle
@@ -17,6 +44,7 @@ github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth/keychain
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth/live
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth/oauth
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth/store
+github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/authprompt
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/build_cache/kv
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/ccache
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/ccache/analytics
@@ -31,25 +59,38 @@ github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/multiplatform
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/reactnative
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/xcelerate
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/consts
-github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/daemon
+github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/dependencies
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/diagnostics
+github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/doctor
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/envexport
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/exec
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/filegroup
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/githubapi
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/gradle
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/hash
+github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/invocations
+github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/logio
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/paths
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/permhint
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/refresh
+github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/spawn
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/stringmerge
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/toolconfig
+github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/tui
+github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/updater
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/utils
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/versioncheck
+github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/xcelerate/analytics
+github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/xcelerate/enrichment
+github.com/bitrise-io/bitrise-build-cache-cli/v3/pkg/bazel
+github.com/bitrise-io/bitrise-build-cache-cli/v3/pkg/ccache
 github.com/bitrise-io/bitrise-build-cache-cli/v3/pkg/common
 github.com/bitrise-io/bitrise-build-cache-cli/v3/pkg/common/childstats
+github.com/bitrise-io/bitrise-build-cache-cli/v3/pkg/gradle
 github.com/bitrise-io/bitrise-build-cache-cli/v3/pkg/gradle/mirrors
+github.com/bitrise-io/bitrise-build-cache-cli/v3/pkg/reactnative
 github.com/bitrise-io/bitrise-build-cache-cli/v3/pkg/status
+github.com/bitrise-io/bitrise-build-cache-cli/v3/pkg/xcode
 github.com/bitrise-io/bitrise-build-cache-cli/v3/proto/build/bazel/remote/execution/v2
 github.com/bitrise-io/bitrise-build-cache-cli/v3/proto/kv_storage
 # github.com/bitrise-io/bitrise-plugins-annotations v0.0.0-20250424075238-a72af2229551
@@ -94,6 +135,41 @@ github.com/bitrise-io/got
 # github.com/bmatcuk/doublestar/v4 v4.6.1
 ## explicit; go 1.16
 github.com/bmatcuk/doublestar/v4
+# github.com/catppuccin/go v0.3.0
+## explicit; go 1.19
+github.com/catppuccin/go
+# github.com/charmbracelet/colorprofile v0.4.2
+## explicit; go 1.24.2
+github.com/charmbracelet/colorprofile
+# github.com/charmbracelet/ultraviolet v0.0.0-20260205113103-524a6607adb8
+## explicit; go 1.24.2
+github.com/charmbracelet/ultraviolet
+# github.com/charmbracelet/x/ansi v0.11.6
+## explicit; go 1.24.2
+github.com/charmbracelet/x/ansi
+github.com/charmbracelet/x/ansi/kitty
+github.com/charmbracelet/x/ansi/parser
+# github.com/charmbracelet/x/exp/ordered v0.1.0
+## explicit; go 1.21
+github.com/charmbracelet/x/exp/ordered
+# github.com/charmbracelet/x/exp/strings v0.0.0-20240722160745-212f7b056ed0
+## explicit; go 1.19
+github.com/charmbracelet/x/exp/strings
+# github.com/charmbracelet/x/term v0.2.2
+## explicit; go 1.24.0
+github.com/charmbracelet/x/term
+# github.com/charmbracelet/x/termios v0.1.1
+## explicit; go 1.18
+github.com/charmbracelet/x/termios
+# github.com/charmbracelet/x/windows v0.2.2
+## explicit; go 1.23.0
+github.com/charmbracelet/x/windows
+# github.com/clipperhouse/displaywidth v0.11.0
+## explicit; go 1.18
+github.com/clipperhouse/displaywidth
+# github.com/clipperhouse/uax29/v2 v2.7.0
+## explicit; go 1.18
+github.com/clipperhouse/uax29/v2/graphemes
 # github.com/danieljoos/wincred v1.2.3
 ## explicit; go 1.18
 github.com/danieljoos/wincred
@@ -150,12 +226,24 @@ github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/klauspost/cpuid/v2 v2.0.12
 ## explicit; go 1.15
 github.com/klauspost/cpuid/v2
+# github.com/lucasb-eyer/go-colorful v1.3.0
+## explicit; go 1.12
+github.com/lucasb-eyer/go-colorful
 # github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0
 ## explicit; go 1.16
 github.com/lufia/plan9stats
+# github.com/mattn/go-runewidth v0.0.20
+## explicit; go 1.20
+github.com/mattn/go-runewidth
+# github.com/mitchellh/hashstructure/v2 v2.0.2
+## explicit; go 1.14
+github.com/mitchellh/hashstructure/v2
 # github.com/mitchellh/mapstructure v1.5.0
 ## explicit; go 1.14
 github.com/mitchellh/mapstructure
+# github.com/muesli/cancelreader v0.2.2
+## explicit; go 1.17
+github.com/muesli/cancelreader
 # github.com/pkg/xattr v0.4.12
 ## explicit; go 1.14
 github.com/pkg/xattr
@@ -165,6 +253,9 @@ github.com/pmezard/go-difflib/difflib
 # github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55
 ## explicit; go 1.14
 github.com/power-devops/perfstat
+# github.com/rivo/uniseg v0.4.7
+## explicit; go 1.18
+github.com/rivo/uniseg
 # github.com/shirou/gopsutil/v4 v4.26.6
 ## explicit; go 1.24.0
 github.com/shirou/gopsutil/v4/common
@@ -193,6 +284,9 @@ github.com/tklauser/go-sysconf
 # github.com/tklauser/numcpus v0.11.0
 ## explicit; go 1.24.0
 github.com/tklauser/numcpus
+# github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
+## explicit; go 1.19
+github.com/xo/terminfo
 # github.com/yusufpapurcu/wmi v1.2.4
 ## explicit; go 1.16
 github.com/yusufpapurcu/wmi
@@ -226,6 +320,9 @@ golang.org/x/net/internal/httpcommon
 golang.org/x/net/internal/httpsfv
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
+# golang.org/x/sync v0.22.0
+## explicit; go 1.25.0
+golang.org/x/sync/errgroup
 # golang.org/x/sys v0.47.0
 ## explicit; go 1.25.0
 golang.org/x/sys/unix
@@ -354,3 +451,6 @@ google.golang.org/protobuf/types/known/wrapperspb
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
+# howett.net/plist v1.0.1
+## explicit; go 1.12
+howett.net/plist

@@ -1,0 +1,369 @@
+package reactnative
+
+import (
+	"context"
+	"fmt"
+	osexec "os/exec"
+	"time"
+
+	"github.com/bitrise-io/go-utils/v2/log"
+	"github.com/google/uuid"
+
+	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/auth/live"
+	ccacheipc "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/ccache"
+	ccacheconfig "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/ccache"
+	configcommon "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/common"
+	multiplatformconfig "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/multiplatform"
+	rnconfig "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/reactnative"
+	doctorpkg "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/doctor"
+	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/exec"
+	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/utils"
+)
+
+// MsgRNNotActivated is the warning emitted when `react-native run` is invoked
+// before (or without) `activate react-native`. The user's command is still
+// executed unchanged so the build doesn't fail; only the build-cache wrapping
+// (ccache plumbing, invocation ID injection, analytics) is skipped.
+const MsgRNNotActivated = "Bitrise Build Cache for React Native is not activated on this machine — running the wrapped command without build-cache instrumentation. Run `bitrise-build-cache activate react-native` (with a workspace ID configured) first to enable."
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+// ExecFunc runs a command with the given environment, executable name, and
+// arguments. It returns the child process's exit code (0 on success, the
+// child's exit status on non-zero exit, or 1 on launch failure) alongside any
+// launch error. Exit-code propagation is the caller's responsibility —
+// implementations must NOT call os.Exit, so any post-run hook set up around
+// ExecFn can complete before the process terminates.
+type ExecFunc func(environ []string, name string, args ...string) (int, error)
+
+// RunnerParams holds the configuration for creating a Runner.
+type RunnerParams struct {
+	ExecFn ExecFunc
+
+	// Logger overrides the default logger. If nil, a default logger is created.
+	Logger log.Logger
+	// OsProxy overrides the default OS proxy. If nil, utils.DefaultOsProxy{} is used.
+	OsProxy utils.OsProxy
+	// DecoderFactory overrides the default decoder factory. If nil, utils.DefaultDecoderFactory{} is used.
+	DecoderFactory utils.DecoderFactory
+	// DebugLogging ORs with the on-disk multiplatform config's DebugLogging.
+	DebugLogging bool
+	// SkipDoctor disables the health checks run around the wrapped command, as
+	// --no-doctor and BITRISE_BUILD_CACHE_SKIP_DOCTOR do.
+	SkipDoctor bool
+	// Resolver overrides credential resolution. If nil, the production resolver is
+	// used; tests inject one so the readiness gate never reads the real keychain.
+	Resolver *live.Resolver
+}
+
+//go:generate moq -stub -out post_run_runner_mock_test.go -pkg reactnative . postRunRunner
+
+type postRunRunner interface {
+	run(
+		context context.Context,
+		wrapperInvocationID string,
+		args []string,
+		duration time.Duration,
+		execErr error,
+	) buildOutcome
+}
+
+// Runner wraps a command execution with invocation ID injection, pre-run hooks,
+// and post-run analytics.
+type Runner struct {
+	execFn         ExecFunc
+	logger         log.Logger
+	osProxy        utils.OsProxy
+	decoderFactory utils.DecoderFactory
+	postRun        postRunRunner
+	ccacheConfig   *ccacheconfig.Config
+	socket         ccacheSocket
+	// doctor is nil when the health checks are opted out of.
+	doctor buildHealthReporter
+	// resolver answers the readiness gate. Injected so tests do not consult the
+	// machine's real keychain.
+	resolver *live.Resolver
+}
+
+// NewRunner creates a Runner with production pre-run and post-run hooks.
+func NewRunner(params RunnerParams) *Runner {
+	osProxy := params.OsProxy
+	if osProxy == nil {
+		osProxy = utils.DefaultOsProxy{}
+	}
+
+	decoderFactory := params.DecoderFactory
+	if decoderFactory == nil {
+		decoderFactory = utils.DefaultDecoderFactory{}
+	}
+
+	debug := resolveDebugLogging(params.DebugLogging, osProxy, decoderFactory)
+
+	logger := params.Logger
+	if logger == nil {
+		logger = log.NewLogger(log.WithDebugLog(debug))
+	}
+
+	resolver := params.Resolver
+	if resolver == nil {
+		resolver = live.Default(logger)
+	}
+
+	var ccacheConfig *ccacheconfig.Config
+	var socket ccacheSocket
+	if config, err := ccacheconfig.ReadConfig(osProxy, decoderFactory, utils.AllEnvs()); err == nil {
+		ccacheConfig = &config
+		socket = ccacheipc.NewSocket(config.IPCEndpoint)
+	}
+
+	r := &Runner{
+		execFn:         params.ExecFn,
+		logger:         logger,
+		osProxy:        osProxy,
+		decoderFactory: decoderFactory,
+		ccacheConfig:   ccacheConfig,
+		postRun:        newPostRunDeps(logger, resolver),
+		socket:         socket,
+		resolver:       resolver,
+	}
+
+	if !params.SkipDoctor && utils.AllEnvs()[doctorpkg.EnvSkipDoctor] == "" {
+		r.doctor = &rnDoctor{Logger: logger, Debug: debug}
+	}
+
+	return r
+}
+
+// Run injects a BITRISE_INVOCATION_ID into environ and delegates execution to
+// ExecFn. If wrapperInvocationID is empty, a random UUID is used. Returns the
+// child's exit code (0 on success, forwarded on non-zero) alongside any launch
+// error; the caller is responsible for propagating the exit code via os.Exit
+// so that the post-run hook can complete before the process dies.
+//
+// When `activate react-native` was never run on this machine (or the
+// activation didn't carry a workspace ID through), the wrapped command is
+// still executed but every build-cache-related side-effect — ccache helper
+// plumbing, invocation ID injection, analytics — is skipped. The user's
+// build never fails just because the cache wasn't activated.
+func (r *Runner) Run(ctx context.Context, args []string, wrapperInvocationID string, environ []string) (int, error) {
+	configcommon.LogCLIVersion(r.logger)
+
+	// Only before the "--" separator: past it the argument is the child's.
+	for len(args) > 0 && args[0] == doctorpkg.NoDoctorFlag {
+		r.doctor, args = nil, args[1:]
+	}
+
+	// Strip leading "--" separator (cobra passes it through with DisableFlagParsing)
+	if len(args) > 0 && args[0] == "--" {
+		args = args[1:]
+	}
+
+	if len(args) == 0 {
+		return 1, fmt.Errorf("missing arguments")
+	}
+
+	name, cmdArgs := args[0], args[1:]
+
+	if !r.isReactNativeReady() {
+		r.logger.TWarnf(MsgRNNotActivated)
+
+		return r.execFn(environ, name, cmdArgs...)
+	}
+
+	if wrapperInvocationID == "" {
+		r.logger.TInfof("No invocation ID provided, generating a random one")
+
+		wrapperInvocationID = uuid.New().String()
+	}
+
+	r.logger.TInfof("React Native invocation ID: %s", wrapperInvocationID)
+
+	helperReady := false
+	if r.socket != nil {
+		helperReady = r.ensureHelper(ctx, wrapperInvocationID)
+		r.zeroCcacheStats(ctx)
+	}
+
+	// After ensureHelper, so a helper this run started is not reported as down.
+	if r.doctor != nil {
+		r.doctor.CheckAtStart(ctx)
+	}
+
+	envMap := environToMap(environ)
+	envMap["BITRISE_INVOCATION_ID"] = wrapperInvocationID
+	if helperReady {
+		r.injectCcacheEnv(envMap)
+	}
+	r.maybeInjectEASWorkingDir(envMap, name, cmdArgs)
+
+	start := time.Now()
+	exitCode, execErr := r.execFn(mapToEnviron(envMap), name, cmdArgs...)
+	duration := time.Since(start)
+
+	var outcome buildOutcome
+	if r.postRun != nil {
+		outcome = r.postRun.run(context.Background(), wrapperInvocationID, args, duration, execErr) //nolint:contextcheck // intentionally detached: post-run analytics must complete even if parent ctx is cancelled
+	}
+
+	//nolint:contextcheck // intentionally detached, for the same reason as the post-run hook above
+	if r.doctor != nil {
+		reportCtx := context.Background()
+		if outcome.InvocationSaveFailed {
+			r.doctor.OnInvocationSaveFailure(reportCtx)
+		}
+		r.doctor.ReportAtEnd(reportCtx, outcome)
+	}
+
+	return exitCode, execErr
+}
+
+// isReactNativeReady reports whether `activate react-native` was run on this
+// machine AND the multiplatform analytics config has the workspace slug we
+// need to identify the user's workspace at analytics + UI URL time.
+//
+// Both signals must agree. The RN marker on its own only says "activate
+// happened"; the multiplatform config carries the workspace slug that the
+// post-run hook and the Visit-URL log line depend on. A missing or
+// empty-workspace config means we cannot safely report analytics or print
+// a working details URL, so we skip wrapping entirely (and log once).
+func (r *Runner) isReactNativeReady() bool {
+	cfg, err := rnconfig.ReadConfig(r.osProxy, r.decoderFactory)
+	if err != nil || !cfg.Enabled {
+		return false
+	}
+
+	cred, _, err := r.resolver.ResolveNoRefresh(utils.AllEnvs())
+
+	return err == nil && cred.WorkspaceID != ""
+}
+
+// ---------------------------------------------------------------------------
+// Private — Runner methods
+// ---------------------------------------------------------------------------
+
+type ccacheSocket interface {
+	IsListening() bool
+	Start(opts ...ccacheipc.StartOption) error
+	AwaitReady() bool
+	HealthCheck(ctx context.Context) error
+	SetInvocationID(ctx context.Context, parentID, childID string) error
+}
+
+// The verdict gates injectCcacheEnv. Every step is still attempted after a failure:
+// the helper is best-effort and must never block the build.
+func (r *Runner) ensureHelper(ctx context.Context, wrapperInvocationID string) bool {
+	socket := r.socket
+	if socket == nil {
+		return false
+	}
+
+	ready := true
+
+	if !socket.IsListening() {
+		if err := socket.Start(); err != nil {
+			r.logger.TWarnf("Failed to start ccache storage helper: %v", err)
+
+			return false
+		}
+
+		if !socket.AwaitReady() {
+			r.logger.TWarnf("Ccache storage helper did not become ready")
+			ready = false
+		}
+	}
+
+	if err := socket.HealthCheck(ctx); err != nil {
+		r.logger.TWarnf("Ccache storage helper health check failed: %v", err)
+		ready = false
+	}
+
+	if err := socket.SetInvocationID(ctx, wrapperInvocationID, uuid.NewString()); err != nil {
+		r.logger.TWarnf("Failed to send invocation ID to storage helper: %v", err)
+		ready = false
+	}
+
+	return ready
+}
+
+// Activation publishes these through envman, which exists only on Bitrise CI, so
+// off CI nothing else tells the compiler the socket is there. A value the user
+// already set wins.
+func (r *Runner) injectCcacheEnv(envs map[string]string) {
+	if r.ccacheConfig == nil {
+		return
+	}
+
+	wd, err := r.osProxy.Getwd()
+	if err != nil {
+		r.logger.Debugf("Could not resolve the working directory for CCACHE_BASEDIR: %s", err)
+	}
+
+	injected := 0
+	for key, value := range r.ccacheConfig.BuildEnv(wd) {
+		if value == "" {
+			continue
+		}
+		if existing, ok := envs[key]; ok && existing != "" {
+			r.logger.Debugf("%s already set to %q — leaving it alone", key, existing)
+
+			continue
+		}
+		envs[key] = value
+		injected++
+	}
+
+	if injected > 0 {
+		r.logger.TInfof("Routing ccache through the Bitrise storage helper (%s)", r.ccacheConfig.IPCEndpoint)
+	}
+}
+
+// maybeInjectEASWorkingDir pins EAS Build's local working directory to a
+// stable path when the wrapped command is `eas build` (directly or via a
+// package-manager runner). Without this, EAS picks a new tmp dir per
+// invocation and every downstream cache (Gradle, Xcode, ccache) misses
+// because absolute source paths feed into the cache keys.
+//
+// The injection is a no-op when the user has already set
+// EAS_LOCAL_BUILD_WORKINGDIR — explicit user intent wins. It is also a no-op
+// when HOME is missing from the environment (DefaultEASWorkingDir returns ""),
+// because we have no safe path to pin to.
+func (r *Runner) maybeInjectEASWorkingDir(envs map[string]string, name string, cmdArgs []string) {
+	if !IsEASBuildInvocation(name, cmdArgs) {
+		return
+	}
+
+	if _, alreadySet := envs[EASWorkingDirEnv]; alreadySet {
+		return
+	}
+
+	workdir := DefaultEASWorkingDir(envs)
+	if workdir == "" {
+		return
+	}
+
+	r.logger.TInfof("Pinning %s=%s for EAS Build cache stability", EASWorkingDirEnv, workdir)
+	envs[EASWorkingDirEnv] = workdir
+}
+
+func (r *Runner) zeroCcacheStats(ctx context.Context) {
+	path, err := osexec.LookPath("ccache")
+	if err != nil {
+		return
+	}
+
+	if _, _, err := (exec.ExecRunner{}).RunCheck(ctx, path, "-z"); err != nil {
+		r.logger.TWarnf("Failed to reset ccache stats: %v", err)
+	}
+}
+
+// resolveDebugLogging ORs params.DebugLogging with the on-disk multiplatform config's DebugLogging.
+func resolveDebugLogging(paramsDebug bool, osProxy utils.OsProxy, decoderFactory utils.DecoderFactory) bool {
+	debug := paramsDebug
+	if cfg, err := multiplatformconfig.ReadConfig(osProxy, decoderFactory); err == nil {
+		debug = debug || cfg.DebugLogging
+	}
+
+	return debug
+}
