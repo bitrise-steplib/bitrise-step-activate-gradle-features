@@ -1,5 +1,5 @@
-# charm.land/bubbles/v2 v2.0.0
-## explicit; go 1.24.2
+# charm.land/bubbles/v2 v2.2.1
+## explicit; go 1.25.0
 charm.land/bubbles/v2/cursor
 charm.land/bubbles/v2/filepicker
 charm.land/bubbles/v2/help
@@ -10,8 +10,8 @@ charm.land/bubbles/v2/spinner
 charm.land/bubbles/v2/textarea
 charm.land/bubbles/v2/textinput
 charm.land/bubbles/v2/viewport
-# charm.land/bubbletea/v2 v2.0.2
-## explicit; go 1.24.2
+# charm.land/bubbletea/v2 v2.0.8
+## explicit; go 1.25.0
 charm.land/bubbletea/v2
 # charm.land/huh/v2 v2.0.3
 ## explicit; go 1.25.8
@@ -19,7 +19,7 @@ charm.land/huh/v2
 charm.land/huh/v2/internal/accessibility
 charm.land/huh/v2/internal/compat
 charm.land/huh/v2/internal/selector
-# charm.land/lipgloss/v2 v2.0.1
+# charm.land/lipgloss/v2 v2.0.5
 ## explicit; go 1.25.0
 charm.land/lipgloss/v2
 # cloud.google.com/go/longrunning v1.2.0
@@ -31,11 +31,11 @@ github.com/atotto/clipboard
 # github.com/bazelbuild/remote-apis v0.0.0-20260331222004-becdd8f9ff81
 ## explicit; go 1.24.0
 github.com/bazelbuild/remote-apis/build/bazel/semver
-# github.com/beevik/etree v1.7.0
+# github.com/beevik/etree v1.7.1
 ## explicit; go 1.23.0
 github.com/beevik/etree
-# github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.9.1
-## explicit; go 1.25.8
+# github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.9.2
+## explicit; go 1.26.0
 github.com/bitrise-io/bitrise-build-cache-cli/v3/cmd/common
 github.com/bitrise-io/bitrise-build-cache-cli/v3/cmd/gradle
 github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/analytics/multiplatform
@@ -98,7 +98,7 @@ github.com/bitrise-io/bitrise-build-cache-cli/v3/proto/llvm/session
 # github.com/bitrise-io/bitrise-plugins-annotations v0.0.0-20250424075238-a72af2229551
 ## explicit; go 1.20
 github.com/bitrise-io/bitrise-plugins-annotations/service
-# github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.50
+# github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.52
 ## explicit; go 1.21
 github.com/bitrise-io/go-steputils/v2/cache
 github.com/bitrise-io/go-steputils/v2/cache/compression
@@ -116,7 +116,7 @@ github.com/bitrise-io/go-utils/log
 github.com/bitrise-io/go-utils/pathutil
 github.com/bitrise-io/go-utils/retry
 github.com/bitrise-io/go-utils/ziputil
-# github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.36
+# github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.38
 ## explicit; go 1.21
 github.com/bitrise-io/go-utils/v2/analytics
 github.com/bitrise-io/go-utils/v2/command
@@ -131,7 +131,7 @@ github.com/bitrise-io/go-utils/v2/parseutil
 github.com/bitrise-io/go-utils/v2/pathutil
 github.com/bitrise-io/go-utils/v2/retry
 github.com/bitrise-io/go-utils/v2/retryhttp
-# github.com/bitrise-io/got v0.0.0-20240902113940-25f6469d1456
+# github.com/bitrise-io/got v0.0.0-20260223134234-6d4aa9f90a75
 ## explicit; go 1.18
 github.com/bitrise-io/got
 # github.com/bmatcuk/doublestar/v4 v4.6.1
@@ -140,13 +140,13 @@ github.com/bmatcuk/doublestar/v4
 # github.com/catppuccin/go v0.3.0
 ## explicit; go 1.19
 github.com/catppuccin/go
-# github.com/charmbracelet/colorprofile v0.4.2
-## explicit; go 1.24.2
+# github.com/charmbracelet/colorprofile v0.4.3
+## explicit; go 1.25.0
 github.com/charmbracelet/colorprofile
-# github.com/charmbracelet/ultraviolet v0.0.0-20260205113103-524a6607adb8
-## explicit; go 1.24.2
+# github.com/charmbracelet/ultraviolet v0.0.0-20260703014108-f5a850f9c2b7
+## explicit; go 1.25.0
 github.com/charmbracelet/ultraviolet
-# github.com/charmbracelet/x/ansi v0.11.6
+# github.com/charmbracelet/x/ansi v0.11.7
 ## explicit; go 1.24.2
 github.com/charmbracelet/x/ansi
 github.com/charmbracelet/x/ansi/kitty
@@ -175,16 +175,13 @@ github.com/clipperhouse/uax29/v2/graphemes
 # github.com/danieljoos/wincred v1.2.3
 ## explicit; go 1.18
 github.com/danieljoos/wincred
-# github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
-## explicit
-github.com/davecgh/go-spew/spew
 # github.com/docker/go-units v0.4.0
 ## explicit
 github.com/docker/go-units
 # github.com/dustin/go-humanize v1.0.1
 ## explicit; go 1.16
 github.com/dustin/go-humanize
-# github.com/ebitengine/purego v0.10.0
+# github.com/ebitengine/purego v0.10.2
 ## explicit; go 1.18
 github.com/ebitengine/purego
 github.com/ebitengine/purego/internal/cgo
@@ -201,8 +198,8 @@ github.com/godbus/dbus/v5
 # github.com/gofrs/flock v0.13.0
 ## explicit; go 1.24.0
 github.com/gofrs/flock
-# github.com/gofrs/uuid/v5 v5.4.0
-## explicit; go 1.19
+# github.com/gofrs/uuid/v5 v5.5.1
+## explicit; go 1.25
 github.com/gofrs/uuid/v5
 # github.com/google/uuid v1.6.0
 ## explicit
@@ -228,14 +225,14 @@ github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/klauspost/cpuid/v2 v2.0.12
 ## explicit; go 1.15
 github.com/klauspost/cpuid/v2
-# github.com/lucasb-eyer/go-colorful v1.3.0
+# github.com/lucasb-eyer/go-colorful v1.4.0
 ## explicit; go 1.12
 github.com/lucasb-eyer/go-colorful
 # github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0
 ## explicit; go 1.16
 github.com/lufia/plan9stats
-# github.com/mattn/go-runewidth v0.0.20
-## explicit; go 1.20
+# github.com/mattn/go-runewidth v0.0.27
+## explicit; go 1.23
 github.com/mattn/go-runewidth
 # github.com/mitchellh/hashstructure/v2 v2.0.2
 ## explicit; go 1.14
@@ -249,16 +246,13 @@ github.com/muesli/cancelreader
 # github.com/pkg/xattr v0.4.12
 ## explicit; go 1.14
 github.com/pkg/xattr
-# github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
-## explicit
-github.com/pmezard/go-difflib/difflib
 # github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55
 ## explicit; go 1.14
 github.com/power-devops/perfstat
 # github.com/rivo/uniseg v0.4.7
 ## explicit; go 1.18
 github.com/rivo/uniseg
-# github.com/shirou/gopsutil/v4 v4.26.6
+# github.com/shirou/gopsutil/v4 v4.26.7
 ## explicit; go 1.24.0
 github.com/shirou/gopsutil/v4/common
 github.com/shirou/gopsutil/v4/cpu
@@ -272,13 +266,15 @@ github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.10
 ## explicit; go 1.12
 github.com/spf13/pflag
-# github.com/stretchr/objx v0.5.2
+# github.com/stretchr/objx v0.5.3
 ## explicit; go 1.20
 github.com/stretchr/objx
-# github.com/stretchr/testify v1.11.1
+# github.com/stretchr/testify v1.12.1
 ## explicit; go 1.17
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/assert/yaml
+github.com/stretchr/testify/internal/difflib
+github.com/stretchr/testify/internal/spew
 github.com/stretchr/testify/mock
 # github.com/tklauser/go-sysconf v0.3.16
 ## explicit; go 1.24.0
@@ -309,8 +305,11 @@ github.com/zeebo/blake3/internal/alg/hash/hash_avx2
 github.com/zeebo/blake3/internal/alg/hash/hash_pure
 github.com/zeebo/blake3/internal/consts
 github.com/zeebo/blake3/internal/utils
-# golang.org/x/mod v0.38.0
-## explicit; go 1.25.0
+# go.yaml.in/yaml/v3 v3.0.5
+## explicit; go 1.16
+go.yaml.in/yaml/v3
+# golang.org/x/mod v0.41.0
+## explicit; go 1.26.0
 golang.org/x/mod/semver
 # golang.org/x/net v0.58.0
 ## explicit; go 1.25.0
@@ -412,7 +411,7 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# google.golang.org/protobuf v1.36.11
+# google.golang.org/protobuf v1.36.12
 ## explicit; go 1.23
 google.golang.org/protobuf/encoding/protojson
 google.golang.org/protobuf/encoding/prototext
@@ -450,9 +449,6 @@ google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/emptypb
 google.golang.org/protobuf/types/known/timestamppb
 google.golang.org/protobuf/types/known/wrapperspb
-# gopkg.in/yaml.v3 v3.0.1
-## explicit
-gopkg.in/yaml.v3
 # howett.net/plist v1.0.1
 ## explicit; go 1.12
 howett.net/plist
