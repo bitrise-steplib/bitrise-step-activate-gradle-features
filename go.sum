@@ -18,8 +18,8 @@ github.com/bazelbuild/remote-apis v0.0.0-20260331222004-becdd8f9ff81 h1:vAHLeMHi
 github.com/bazelbuild/remote-apis v0.0.0-20260331222004-becdd8f9ff81/go.mod h1:7Tyi5f5+hG+6LwC0X/G/EjCQS4ZYJUcpY0geSsU2NAw=
 github.com/beevik/etree v1.7.1 h1:xBlSFAjlMfZkrCNKCEdZ2MSN9pfQYeRBaISDnAVi4Ek=
 github.com/beevik/etree v1.7.1/go.mod h1:bh4zJxiIr62SOf9pRzN7UUYaEDa9HEKafK25+sLc0Gc=
-github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.10.0 h1:oMxIfaxXvSoWDgi99J4PMji5roHS1VGd+w1rTUo+Id0=
-github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.10.0/go.mod h1:tEmoT95L5mENiM9oSSvo7ZbrM9iZEJbCgg4h3m7m+X8=
+github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.11.0 h1:vX24Qd8mwWJcFhbM3OgTqocNbYlJKLvFdeIlwuuJB6E=
+github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.11.0/go.mod h1:tEmoT95L5mENiM9oSSvo7ZbrM9iZEJbCgg4h3m7m+X8=
 github.com/bitrise-io/bitrise-plugins-annotations v0.0.0-20250424075238-a72af2229551 h1:0oemhAZPFYob8VGgZt+PsSHGz/rDwEe7TcwnVYZP7tk=
 github.com/bitrise-io/bitrise-plugins-annotations v0.0.0-20250424075238-a72af2229551/go.mod h1:Jd/NQYOook7BPVTg9HGy5xWPrUu0MTQuT/v3r4mv2X8=
 github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.52 h1:2Xpeb4cP4LuncPHsnS/QMGyWm9RHSn7xvCkxFo8ayog=
