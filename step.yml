@@ -97,9 +97,7 @@ inputs:
     summary: Name of the Bitrise remote worker pool that Gradle Test Distribution shards are sent to.
     is_required: false
     description: |-
-      Name of the Bitrise remote worker pool that Gradle Test Distribution shards are sent to.
-
-      Required when `test_distribution_enabled` is `true`. The pool name must match a pool configured for your workspace.
+      Required when `test_distribution_enabled` is `true`. The pool name must match a Bitrise remote worker pool the workspace has provisioned; if empty, the step fails at parse time.
 
 # -------------------------------------------------------------------------------
 # Debugging

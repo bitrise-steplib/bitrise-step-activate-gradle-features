@@ -156,7 +156,7 @@ func Test_Step(t *testing.T) {
 
 		err := sut.Run()
 		assert.ErrorContains(t, err, step.FailedToParseInputsMsg)
-		assert.ErrorContains(t, err, features.TestDistributionMissingPool)
+		assert.ErrorContains(t, err, features.TestDistributionMissingPoolMsg)
 		assert.Equal(t, 0, command.Executed)
 	})
 }

@@ -57,7 +57,7 @@ workflows:
     - BUILD_CACHE_VALIDATION_LEVEL: warning
     - TEST_DISTRIBUTION_ENABLED: "true"
     - TEST_DISTRIBUTION_SHARD_SIZE: "50"
-    - TEST_DISTRIBUTION_POOL: "linux-large"
+    - TEST_DISTRIBUTION_POOL: "linux"
     - VERBOSE: "true"
     steps:
     - bundle::setup: {}
@@ -71,7 +71,7 @@ workflows:
     - BUILD_CACHE_VALIDATION_LEVEL: warning
     - TEST_DISTRIBUTION_ENABLED: "true"
     - TEST_DISTRIBUTION_SHARD_SIZE: "50"
-    - TEST_DISTRIBUTION_POOL: "linux-large"
+    - TEST_DISTRIBUTION_POOL: "linux"
     - VERBOSE: "true"
     steps:
     - bundle::setup: {}

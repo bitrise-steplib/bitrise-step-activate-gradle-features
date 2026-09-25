@@ -89,7 +89,7 @@ func Test_TestDistributionFeature(t *testing.T) {
 		)
 
 		assert.Nil(t, actual)
-		assert.EqualError(t, err, features.TestDistributionMissingPool)
+		assert.EqualError(t, err, features.TestDistributionMissingPoolMsg)
 	})
 }
 

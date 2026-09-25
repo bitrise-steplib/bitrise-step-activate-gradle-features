@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	TestDistributionCheckMsg      = "Checking whether Bitrise Test Distribution is activated for this workspace ..."
-	TestDistributionParsingFailed = "Test Distribution feature is not configured: %s"
-	TestDistributionDisabledMsg   = "Test Distribution feature is not enabled"
-	TestDistributionMissingPool   = "test_distribution_pool is required when test_distribution_enabled is true"
+	TestDistributionCheckMsg       = "Checking whether Bitrise Test Distribution is activated for this workspace ..."
+	TestDistributionParsingFailed  = "Test Distribution feature is not configured: %s"
+	TestDistributionDisabledMsg    = "Test Distribution feature is not enabled"
+	TestDistributionMissingPoolMsg = "test_distribution_pool is required when test_distribution_enabled is true"
 )
 
 type TestDistribution struct {
@@ -42,7 +42,7 @@ func TestDistributionFeature(
 	}
 
 	if td.PoolName == "" {
-		return nil, errors.New(TestDistributionMissingPool)
+		return nil, errors.New(TestDistributionMissingPoolMsg)
 	}
 
 	return &td, nil
