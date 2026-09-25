@@ -7,6 +7,7 @@ import (
 	"github.com/bitrise-io/go-steputils/v2/stepconf"
 	utilsMocks "github.com/bitrise-io/go-utils/v2/mocks"
 	"github.com/bitrise-steplib/bitrise-step-activate-gradle-features/step"
+	"github.com/bitrise-steplib/bitrise-step-activate-gradle-features/step/features"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -27,6 +28,7 @@ func Test_Step(t *testing.T) {
 		envRepo.Set("BITRISEIO_BUILD_CACHE_ENABLED", "true") //nolint: errcheck
 		envRepo.Set("test_distribution_enabled", "true")     //nolint: errcheck
 		envRepo.Set("test_distribution_shard_size", "50")    //nolint: errcheck
+		envRepo.Set("test_distribution_pool", "linux-large") //nolint: errcheck
 		envRepo.Set("verbose", "true")                       //nolint: errcheck
 
 		command := &MockCommand{}
@@ -53,6 +55,7 @@ func Test_Step(t *testing.T) {
 			"--cache-validation=error",
 			"--test-distribution",
 			"--test-distribution-shard-size=50",
+			"--test-distribution-pool=linux-large",
 		})
 	})
 
@@ -102,9 +105,10 @@ func Test_Step(t *testing.T) {
 
 	t.Run("Failed to activate", func(t *testing.T) {
 		envRepo := NewMockEnvRepo()
-		envRepo.Set("test_distribution_enabled", "true")  //nolint: errcheck
-		envRepo.Set("test_distribution_shard_size", "50") //nolint: errcheck
-		envRepo.Set("verbose", "false")                   //nolint: errcheck
+		envRepo.Set("test_distribution_enabled", "true")     //nolint: errcheck
+		envRepo.Set("test_distribution_shard_size", "50")    //nolint: errcheck
+		envRepo.Set("test_distribution_pool", "linux-large") //nolint: errcheck
+		envRepo.Set("verbose", "false")                      //nolint: errcheck
 
 		logger := &utilsMocks.Logger{}
 		logger.On("EnableDebugLog", false).Return().Once()
@@ -127,5 +131,32 @@ func Test_Step(t *testing.T) {
 		err := sut.Run()
 		assert.EqualError(t, err, step.FailedToActivateMsg+": "+assert.AnError.Error())
 		assert.Equal(t, 1, command.Executed)
+	})
+
+	t.Run("Test distribution enabled without pool fails parse", func(t *testing.T) {
+		envRepo := NewMockEnvRepo()
+		envRepo.Set("test_distribution_enabled", "true")  //nolint: errcheck
+		envRepo.Set("test_distribution_shard_size", "50") //nolint: errcheck
+		envRepo.Set("verbose", "false")                   //nolint: errcheck
+		// test_distribution_pool intentionally unset
+
+		logger := &utilsMocks.Logger{}
+		logger.On("EnableDebugLog", false).Return().Once()
+		logger.On("Debugf", mock.Anything, mock.Anything).Return()
+
+		command := &MockCommand{}
+
+		sut := step.New(
+			logger,
+			stepconf.NewInputParser(envRepo),
+			envRepo,
+			func(annotation service.Annotation) error { return nil },
+			command,
+		)
+
+		err := sut.Run()
+		assert.ErrorContains(t, err, step.FailedToParseInputsMsg)
+		assert.ErrorContains(t, err, features.TestDistributionMissingPool)
+		assert.Equal(t, 0, command.Executed)
 	})
 }

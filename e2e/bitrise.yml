@@ -14,6 +14,7 @@ workflows:
     - BUILD_CACHE_VALIDATION_LEVEL: none
     - TEST_DISTRIBUTION_ENABLED: "false"
     - TEST_DISTRIBUTION_SHARD_SIZE: "50"
+    - TEST_DISTRIBUTION_POOL: ""
     - VERBOSE: "true"
     - BITRISE_ANALYTICS_DISABLED: "true"
     steps:
@@ -28,6 +29,7 @@ workflows:
     - BUILD_CACHE_VALIDATION_LEVEL: none
     - TEST_DISTRIBUTION_ENABLED: "false"
     - TEST_DISTRIBUTION_SHARD_SIZE: "50"
+    - TEST_DISTRIBUTION_POOL: ""
     - VERBOSE: "true"
     steps:
     - bundle::setup: {}
@@ -41,6 +43,7 @@ workflows:
     - BUILD_CACHE_VALIDATION_LEVEL: warning
     - TEST_DISTRIBUTION_ENABLED: "false"
     - TEST_DISTRIBUTION_SHARD_SIZE: "50"
+    - TEST_DISTRIBUTION_POOL: ""
     - VERBOSE: "true"
     steps:
     - bundle::setup: {}
@@ -54,6 +57,7 @@ workflows:
     - BUILD_CACHE_VALIDATION_LEVEL: warning
     - TEST_DISTRIBUTION_ENABLED: "true"
     - TEST_DISTRIBUTION_SHARD_SIZE: "50"
+    - TEST_DISTRIBUTION_POOL: "linux-large"
     - VERBOSE: "true"
     steps:
     - bundle::setup: {}
@@ -67,6 +71,7 @@ workflows:
     - BUILD_CACHE_VALIDATION_LEVEL: warning
     - TEST_DISTRIBUTION_ENABLED: "true"
     - TEST_DISTRIBUTION_SHARD_SIZE: "50"
+    - TEST_DISTRIBUTION_POOL: "linux-large"
     - VERBOSE: "true"
     steps:
     - bundle::setup: {}
@@ -98,6 +103,7 @@ step_bundles:
         - build_cache_validation_level: $BUILD_CACHE_VALIDATION_LEVEL
         - test_distribution_enabled: $TEST_DISTRIBUTION_ENABLED
         - test_distribution_shard_size: $TEST_DISTRIBUTION_SHARD_SIZE
+        - test_distribution_pool: $TEST_DISTRIBUTION_POOL
         - verbose: $VERBOSE
     - change-workdir:
         title: Switch working dir to _tmp

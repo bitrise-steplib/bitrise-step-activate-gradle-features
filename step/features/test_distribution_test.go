@@ -13,23 +13,26 @@ import (
 func Test_TestDistributionFeature(t *testing.T) {
 	t.Run("Happy path", func(t *testing.T) {
 		envRepo := NewMockEnvRepo()
-		envRepo.Set("test_distribution_enabled", "true")  //nolint: errcheck
-		envRepo.Set("test_distribution_shard_size", "50") //nolint: errcheck
+		envRepo.Set("test_distribution_enabled", "true")     //nolint: errcheck
+		envRepo.Set("test_distribution_shard_size", "50")    //nolint: errcheck
+		envRepo.Set("test_distribution_pool", "linux-large") //nolint: errcheck
 
 		logger := &utilsMocks.Logger{}
 		logger.On("Debugf", mock.Anything, mock.Anything).Return()
 		logger.On("Errorf", mock.Anything, mock.Anything).Return()
 		logger.On("Infof", mock.Anything).Return()
 
-		actual := features.TestDistributionFeature(
+		actual, err := features.TestDistributionFeature(
 			stepconf.NewInputParser(envRepo),
 			envRepo,
 			logger,
 		)
 
+		assert.NoError(t, err)
 		assert.Equal(t, features.TestDistribution{
 			Enabled:   true,
 			ShardSize: 50,
+			PoolName:  "linux-large",
 		}, *actual)
 	})
 
@@ -41,12 +44,13 @@ func Test_TestDistributionFeature(t *testing.T) {
 		logger.On("Debugf", features.TestDistributionCheckMsg).Return().Once()
 		logger.On("Debugf", features.TestDistributionParsingFailed, mock.Anything).Return().Once()
 
-		actual := features.TestDistributionFeature(
+		actual, err := features.TestDistributionFeature(
 			stepconf.NewInputParser(envRepo),
 			envRepo,
 			logger,
 		)
 
+		assert.NoError(t, err)
 		assert.Nil(t, actual)
 	})
 
@@ -59,13 +63,33 @@ func Test_TestDistributionFeature(t *testing.T) {
 		logger.On("Debugf", features.TestDistributionCheckMsg).Return().Once()
 		logger.On("Debugf", features.TestDistributionDisabledMsg).Return().Once()
 
-		actual := features.TestDistributionFeature(
+		actual, err := features.TestDistributionFeature(
+			stepconf.NewInputParser(envRepo),
+			envRepo,
+			logger,
+		)
+
+		assert.NoError(t, err)
+		assert.Nil(t, actual)
+	})
+
+	t.Run("Enabled without pool", func(t *testing.T) {
+		envRepo := NewMockEnvRepo()
+		envRepo.Set("test_distribution_enabled", "true")  //nolint: errcheck
+		envRepo.Set("test_distribution_shard_size", "50") //nolint: errcheck
+		// test_distribution_pool intentionally unset
+
+		logger := &utilsMocks.Logger{}
+		logger.On("Debugf", features.TestDistributionCheckMsg).Return().Once()
+
+		actual, err := features.TestDistributionFeature(
 			stepconf.NewInputParser(envRepo),
 			envRepo,
 			logger,
 		)
 
 		assert.Nil(t, actual)
+		assert.EqualError(t, err, features.TestDistributionMissingPool)
 	})
 }
 
@@ -74,12 +98,14 @@ func Test_TestDistributionCLIFlags(t *testing.T) {
 		td := features.TestDistribution{
 			Enabled:   true,
 			ShardSize: 50,
+			PoolName:  "linux-large",
 		}
 
 		actual := td.CLIFlags()
 		expected := []string{
 			"--test-distribution",
 			"--test-distribution-shard-size=50",
+			"--test-distribution-pool=linux-large",
 		}
 
 		assert.Equal(t, expected, actual)

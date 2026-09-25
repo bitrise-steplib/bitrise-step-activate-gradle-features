@@ -31,4 +31,5 @@ workflows:
         - build_cache_validation_level: none
         - test_distribution_enabled: true
         - test_distribution_shard_size: 200
+        - test_distribution_pool: linux-large
         - verbose: true

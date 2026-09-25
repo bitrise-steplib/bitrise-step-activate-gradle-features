@@ -90,6 +90,16 @@ inputs:
     is_required: true
     description: |-
       Sets the number of tests per shard sent to the Bitrise remote worker pool.
+- test_distribution_pool: ""
+  opts:
+    category: test distribution
+    title: Pool
+    summary: Name of the Bitrise remote worker pool that Gradle Test Distribution shards are sent to.
+    is_required: false
+    description: |-
+      Name of the Bitrise remote worker pool that Gradle Test Distribution shards are sent to.
+
+      Required when `test_distribution_enabled` is `true`. The pool name must match a pool configured for your workspace.
 
 # -------------------------------------------------------------------------------
 # Debugging
