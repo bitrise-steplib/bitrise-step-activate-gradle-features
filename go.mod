@@ -3,10 +3,10 @@ module github.com/bitrise-steplib/bitrise-step-activate-gradle-features
 go 1.26.0
 
 require (
-	github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.13.1
+	github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.14.0
 	github.com/bitrise-io/bitrise-plugins-annotations v0.0.0-20250424075238-a72af2229551
-	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.52
-	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.38
+	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.54
+	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.39
 	github.com/stretchr/testify v1.12.1
 )
 
@@ -18,9 +18,8 @@ require (
 	cloud.google.com/go/longrunning v1.2.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/bazelbuild/remote-apis v0.0.0-20260331222004-becdd8f9ff81 // indirect
-	github.com/beevik/etree v1.7.1 // indirect
-	github.com/bitrise-io/go-utils v1.0.13 // indirect
-	github.com/bitrise-io/got v0.0.0-20260223134234-6d4aa9f90a75 // indirect
+	github.com/beevik/etree v1.8.0 // indirect
+	github.com/bitrise-io/got v0.0.0-20260831101303-9092ae48de2b // indirect
 	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
 	github.com/catppuccin/go v0.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
@@ -39,7 +38,7 @@ require (
 	github.com/ebitengine/purego v0.10.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/godbus/dbus/v5 v5.2.2 // indirect
-	github.com/gofrs/flock v0.13.0 // indirect
+	github.com/gofrs/flock v0.13.1 // indirect
 	github.com/gofrs/uuid/v5 v5.5.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -56,7 +55,7 @@ require (
 	github.com/pkg/xattr v0.4.12 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/shirou/gopsutil/v4 v4.26.7 // indirect
+	github.com/shirou/gopsutil/v4 v4.26.8 // indirect
 	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/stretchr/objx v0.5.3 // indirect
@@ -68,10 +67,10 @@ require (
 	github.com/zeebo/blake3 v0.2.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/mod v0.41.0 // indirect
-	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260630182238-925bb5da69e7 // indirect
 	google.golang.org/genproto/googleapis/bytestream v0.0.0-20251103181224-f26f9409b101 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260630182238-925bb5da69e7 // indirect
