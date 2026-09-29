@@ -33,6 +33,7 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 | `build_cache_validation_level` | Level of cache entry validation for both uploads and downloads.  Levels: - `none`: no validation. - `warning`: print a warning about invalid cache entries, but don't interrupt the build - `error`: print an error about invalid cache entries and interrupt the build | required | `warning` |
 | `test_distribution_enabled` | Enables Gradle Test Distribution for subsequent Gradle executions. When enabled, Gradle tests will automatically split their execution across multiple workers. | required | `false` |
 | `test_distribution_shard_size` | Sets the number of tests per shard sent to the Bitrise remote worker pool. | required | `200` |
+| `test_distribution_pool` | Required when `test_distribution_enabled` is `true`. The pool name must match a Bitrise remote worker pool the workspace has provisioned; if empty, the step fails at parse time. |  |  |
 | `verbose` | Enable logging additional information for troubleshooting | required | `false` |
 </details>
 

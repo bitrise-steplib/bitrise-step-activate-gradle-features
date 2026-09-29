@@ -52,7 +52,10 @@ func (step Step) Run() error {
 	}
 	step.logger.EnableDebugLog(input.Verbose)
 
-	collectedFeatures := step.collectFeatures()
+	collectedFeatures, err := step.collectFeatures()
+	if err != nil {
+		return fmt.Errorf(FailedToParseInputsMsg+": %w", err)
+	}
 	var hasEnabledFeatures bool
 	for _, feature := range collectedFeatures {
 		stepconf.Print(feature)
@@ -76,7 +79,7 @@ func (step Step) Run() error {
 	return nil
 }
 
-func (step Step) collectFeatures() []Feature {
+func (step Step) collectFeatures() ([]Feature, error) {
 	collected := []Feature{}
 
 	analyticsFeature := features.AnalyticsFeature(step.envRepo, step.logger)
@@ -89,12 +92,15 @@ func (step Step) collectFeatures() []Feature {
 		collected = append(collected, buildCacheFeature)
 	}
 
-	testDistributionFeature := features.TestDistributionFeature(step.inputParser, step.envRepo, step.logger)
+	testDistributionFeature, err := features.TestDistributionFeature(step.inputParser, step.envRepo, step.logger)
+	if err != nil {
+		return nil, err
+	}
 	if testDistributionFeature != nil {
 		collected = append(collected, testDistributionFeature)
 	}
 
-	return collected
+	return collected, nil
 }
 
 func (step Step) activate(input Input, collectedFeatures []Feature) error {
