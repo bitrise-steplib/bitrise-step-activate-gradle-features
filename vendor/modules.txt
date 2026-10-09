@@ -22,8 +22,8 @@ charm.land/huh/v2/internal/selector
 # charm.land/lipgloss/v2 v2.0.5
 ## explicit; go 1.25.0
 charm.land/lipgloss/v2
-# cloud.google.com/go/longrunning v1.2.0
-## explicit; go 1.25.0
+# cloud.google.com/go/longrunning v1.3.0
+## explicit; go 1.26.0
 cloud.google.com/go/longrunning/autogen/longrunningpb
 # github.com/atotto/clipboard v0.1.4
 ## explicit
@@ -31,10 +31,10 @@ github.com/atotto/clipboard
 # github.com/bazelbuild/remote-apis v0.0.0-20260331222004-becdd8f9ff81
 ## explicit; go 1.24.0
 github.com/bazelbuild/remote-apis/build/bazel/semver
-# github.com/beevik/etree v1.8.0
+# github.com/beevik/etree v1.8.1
 ## explicit; go 1.23.0
 github.com/beevik/etree
-# github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.17.2
+# github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.17.4
 ## explicit; go 1.26.0
 github.com/bitrise-io/bitrise-build-cache-cli/v3/cmd/common
 github.com/bitrise-io/bitrise-build-cache-cli/v3/cmd/gradle
@@ -102,7 +102,7 @@ github.com/bitrise-io/bitrise-build-cache-cli/v3/proto/llvm/session
 # github.com/bitrise-io/bitrise-plugins-annotations v0.0.0-20250424075238-a72af2229551
 ## explicit; go 1.20
 github.com/bitrise-io/bitrise-plugins-annotations/service
-# github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.54
+# github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.55
 ## explicit; go 1.21
 github.com/bitrise-io/go-steputils/v2/cache
 github.com/bitrise-io/go-steputils/v2/cache/compression
@@ -175,8 +175,8 @@ github.com/danieljoos/wincred
 # github.com/docker/go-units v0.4.0
 ## explicit
 github.com/docker/go-units
-# github.com/dustin/go-humanize v1.0.1
-## explicit; go 1.16
+# github.com/dustin/go-humanize v1.1.0
+## explicit; go 1.21
 github.com/dustin/go-humanize
 # github.com/ebitengine/purego v0.10.2
 ## explicit; go 1.18
@@ -344,17 +344,17 @@ golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# google.golang.org/genproto/googleapis/api v0.0.0-20260630182238-925bb5da69e7
+# google.golang.org/genproto/googleapis/api v0.0.0-20260706201446-f0a921348800
 ## explicit; go 1.25.0
 google.golang.org/genproto/googleapis/api
 google.golang.org/genproto/googleapis/api/annotations
 # google.golang.org/genproto/googleapis/bytestream v0.0.0-20251103181224-f26f9409b101
 ## explicit; go 1.24.0
 google.golang.org/genproto/googleapis/bytestream
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20260630182238-925bb5da69e7
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20260706201446-f0a921348800
 ## explicit; go 1.25.0
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.83.2
+# google.golang.org/grpc v1.84.0
 ## explicit; go 1.25.0
 google.golang.org/grpc
 google.golang.org/grpc/attributes
