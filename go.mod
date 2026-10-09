@@ -3,9 +3,9 @@ module github.com/bitrise-steplib/bitrise-step-activate-gradle-features
 go 1.26.0
 
 require (
-	github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.17.2
+	github.com/bitrise-io/bitrise-build-cache-cli/v3 v3.17.4
 	github.com/bitrise-io/bitrise-plugins-annotations v0.0.0-20250424075238-a72af2229551
-	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.54
+	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.55
 	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.39
 	github.com/stretchr/testify v1.12.1
 )
@@ -15,10 +15,10 @@ require (
 	charm.land/bubbletea/v2 v2.0.8 // indirect
 	charm.land/huh/v2 v2.0.3 // indirect
 	charm.land/lipgloss/v2 v2.0.5 // indirect
-	cloud.google.com/go/longrunning v1.2.0 // indirect
+	cloud.google.com/go/longrunning v1.3.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/bazelbuild/remote-apis v0.0.0-20260331222004-becdd8f9ff81 // indirect
-	github.com/beevik/etree v1.8.0 // indirect
+	github.com/beevik/etree v1.8.1 // indirect
 	github.com/bitrise-io/got v0.0.0-20260831101303-9092ae48de2b // indirect
 	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
 	github.com/catppuccin/go v0.3.0 // indirect
@@ -34,7 +34,7 @@ require (
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/danieljoos/wincred v1.2.3 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
-	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/dustin/go-humanize v1.1.0 // indirect
 	github.com/ebitengine/purego v0.10.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/godbus/dbus/v5 v5.2.2 // indirect
@@ -71,10 +71,10 @@ require (
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260630182238-925bb5da69e7 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260706201446-f0a921348800 // indirect
 	google.golang.org/genproto/googleapis/bytestream v0.0.0-20251103181224-f26f9409b101 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260630182238-925bb5da69e7 // indirect
-	google.golang.org/grpc v1.83.2 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260706201446-f0a921348800 // indirect
+	google.golang.org/grpc v1.84.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	howett.net/plist v1.0.1 // indirect
 )
