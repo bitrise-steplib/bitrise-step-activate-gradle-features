@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/bitrise-io/go-utils/v2/log"
@@ -17,6 +18,7 @@ import (
 	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/envexport"
 	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/paths"
 	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/utils"
+	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/xcode_app"
 )
 
 const (
@@ -30,7 +32,7 @@ set -e
 if [ "${1-}" = "-version" ]; then
   %s "$@"
 else
-  %s/` + paths.XcelerateCLIBinaryName + ` xcelerate xcodebuild "$@"
+  %s/` + paths.CLIBinaryName + ` xcelerate xcodebuild "$@"
 fi
 `
 	xcrunWrapperScriptContent = `#!/bin/bash
@@ -40,7 +42,7 @@ if [ "${1-}" = "xcodebuild" ] && [ "${2-}" = "-version" ]; then
   %s "$@"
 elif [ "${1-}" = "xcodebuild" ]; then
   shift
-  %s/` + paths.XcelerateCLIBinaryName + ` xcelerate xcodebuild "$@"
+  %s/` + paths.CLIBinaryName + ` xcelerate xcodebuild "$@"
 else
   %s "$@"
 fi
@@ -90,6 +92,33 @@ func Activate(
 		return fmt.Errorf(ErrFmtCreateXcodeConfig, err)
 	}
 
+	if runtime.GOOS == "darwin" {
+		// Resolve the CAS plugin path once so the toolchain install and the IDE
+		// xcconfig cannot diverge: both consume the same string. developerDir is
+		// best-effort; the env + anchor-rooted fallbacks still produce a valid
+		// plugin path when it cannot be resolved.
+		developerDir, err := resolveDeveloperDir(ctx, commandFunc, config.OriginalXcodebuildPath)
+		if err != nil {
+			logger.Warnf("Could not resolve Xcode developer dir for toolchain install: %s", err)
+		}
+		pluginPath := ResolveCASPluginPath(envs, developerDir, osProxy)
+
+		if developerDir != "" {
+			// Install the toolchain BEFORE writing the override xcconfig: the writer
+			// probes install state and omits `TOOLCHAINS = <id>` when the bundle is
+			// missing, which otherwise would make Xcode fail to resolve the toolchain
+			// for SPM package targets.
+			installXcodeToolchain(ctx, logger, osProxy, config.ProxySocketPath, developerDir, pluginPath)
+		}
+
+		// Failure is non-fatal: the override is only consumed by the IDE flow.
+		if err := xcode_app.WriteOverrideXCConfig(osProxy, envs, config.ProxySocketPath, pluginPath); err != nil {
+			logger.Warnf("Could not write Xcode.app override xcconfig: %s", err)
+		} else {
+			logger.Debugf("Wrote Xcode.app override xcconfig")
+		}
+	}
+
 	ensureLogDir(logger, osProxy)
 
 	// Materialise an env- or JWT-sourced credential: the proxy and the analytics
@@ -111,7 +140,7 @@ func Activate(
 	if _, _, err := clibin.InstallCLIAt(ctx, PathFor(osProxy, BinDir), clibin.InstallOpts{
 		OsProxy:     osProxy,
 		KillRunning: true,
-		Basename:    paths.XcelerateCLIBinaryName,
+		Basename:    paths.CLIBinaryName,
 	}, logger); err != nil {
 		return fmt.Errorf("failed to copy xcelerate cli to ~/.bitrise-xcelerate/bin: %w", err)
 	}
@@ -196,6 +225,8 @@ func overrideActivateXcodeParamsFromExistingConfig(
 			activateXcodeParams.XcrunPathOverride,
 			existingConfig.OriginalXcrunPath,
 		)
+
+		activateXcodeParams.WrapperlessPipelineEnabled = activateXcodeParams.WrapperlessPipelineEnabled || existingConfig.WrapperlessPipelineEnabled
 	} else if isXcelerateInPath(osProxy, envs) {
 		logger.Warnf("It seems that the xcelerate config file is missing, but xcelerate is already in the PATH. \n" +
 			"This will lead to unexpected behavior when determining the xcodebuild path. \n" +

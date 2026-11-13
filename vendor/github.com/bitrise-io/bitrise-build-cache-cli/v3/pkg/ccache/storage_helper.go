@@ -25,10 +25,8 @@ import (
 	ccacheconfig "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/ccache"
 	configcommon "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/common"
 	machineconfig "github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/config/machine"
-	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/consts"
 	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/exec"
 	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/jobsummary"
-	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/paths"
 	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/utils"
 	pkgcommon "github.com/bitrise-io/bitrise-build-cache-cli/v3/pkg/common"
 	"github.com/bitrise-io/bitrise-build-cache-cli/v3/pkg/common/childstats"
@@ -165,49 +163,15 @@ func (h *StorageHelper) Start(ctx context.Context) error {
 		return fmt.Errorf("create IPC server: %w", err)
 	}
 
-	server.SetProjectMarkerFinder(h.newProjectMarkerFinder())
-	server.SetMachineConfigReader(h.newMachineConfigReader())
+	server.SetOptedOutChecker(func() bool {
+		return machineconfig.ProjectOptedOut(h.osProxy, h.logger)
+	})
 
 	if err := server.Run(ctx); err != nil {
 		return fmt.Errorf("run IPC server: %w", err)
 	}
 
 	return nil
-}
-
-// newProjectMarkerFinder walks up from the storage helper's cwd (which reflects
-// the client's build root under detached spawn) and returns whether a marker
-// exists. The request processor only calls it when opt-in mode is active.
-func (h *StorageHelper) newProjectMarkerFinder() iccache.ProjectMarkerFinder {
-	return func() bool {
-		cwd, err := h.osProxy.Getwd()
-		if err != nil {
-			return false
-		}
-		found, _, err := machineconfig.FindMarker(cwd, h.osProxy)
-		if err != nil {
-			return false
-		}
-
-		return found
-	}
-}
-
-// newMachineConfigReader resolves the machine-wide config on each call.
-// Fail-open: any error yields the zero value (mode gating disabled).
-func (h *StorageHelper) newMachineConfigReader() iccache.MachineConfigReader {
-	return func() machineconfig.Config {
-		p, err := paths.Default()
-		if err != nil {
-			return machineconfig.Config{}
-		}
-		current, err := machineconfig.Read(h.osProxy, p, nil)
-		if err != nil {
-			return machineconfig.Config{}
-		}
-
-		return current
-	}
 }
 
 // Stop gracefully shuts down a running storage helper. Returns nil without
@@ -268,6 +232,12 @@ func (h *StorageHelper) registerInvocationRelation(ctx context.Context) {
 // IDs override the values from internal state and params.
 func (h *StorageHelper) CollectAndSendStats(ctx context.Context, invocationIDOverride, parentIDOverride string) {
 	defer h.zeroCcacheStats(ctx, h.logger)
+
+	if machineconfig.ProjectOptedOut(h.osProxy, h.logger) {
+		h.logger.TInfof("[project-mode] opt-in active, no marker; skipping ccache invocation analytics")
+
+		return
+	}
 
 	_, err := h.loadSessionInfo(ctx, invocationIDOverride, parentIDOverride)
 	if err != nil {
@@ -349,7 +319,7 @@ func (h *StorageHelper) sendInvocation(ctx context.Context, invocationID, parent
 		return
 	}
 
-	client, err := ccacheanalytics.NewClient(consts.MultiplatformAnalyticsServiceEndpoint, authpkg.GradleToken(h.config.AuthConfig, h.config.AuthOrigin), h.logger)
+	client, err := ccacheanalytics.NewClient(configcommon.MultiplatformAnalyticsURL(h.params.Envs), authpkg.GradleToken(h.config.AuthConfig, h.config.AuthOrigin), h.logger)
 	if err != nil {
 		h.logger.TWarnf("Failed to create analytics client for ccache stats: %v", err)
 
