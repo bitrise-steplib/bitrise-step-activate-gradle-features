@@ -147,6 +147,7 @@ func (params ActivateGradleParams) TemplateInventory(
 	}
 
 	projectMode := resolveProjectMode(osProxy, logger)
+	optedOut := machineconfig.ProjectOptedOut(osProxy, logger)
 
 	commonInventory := params.commonTemplateInventory(authConfig, authOrigin, metadata, isDebug, projectMode)
 
@@ -155,7 +156,7 @@ func (params ActivateGradleParams) TemplateInventory(
 		return TemplateInventory{}, fmt.Errorf(errFmtCacheConfigCreation, err)
 	}
 
-	analyticsInventory := params.analyticsTemplateInventory(logger)
+	analyticsInventory := params.analyticsTemplateInventory(logger, optedOut, envs)
 
 	testDistroInventory, err := params.testDistroTemplateInventory(logger, isDebug)
 	if err != nil {
@@ -241,7 +242,17 @@ func (params ActivateGradleParams) cacheTemplateInventory(
 
 func (params ActivateGradleParams) analyticsTemplateInventory(
 	logger log.Logger,
+	optedOut bool,
+	envs map[string]string,
 ) AnalyticsTemplateInventory {
+	if optedOut {
+		logger.Infof("(i) Analytics plugin usage: %+v (project opted out)", UsageLevelNone)
+
+		return AnalyticsTemplateInventory{
+			Usage: UsageLevelNone,
+		}
+	}
+
 	if !params.Analytics.JustDependency && !params.Analytics.Enabled {
 		logger.Infof("(i) Analytics plugin usage: %+v", UsageLevelNone)
 
@@ -264,10 +275,10 @@ func (params ActivateGradleParams) analyticsTemplateInventory(
 	return AnalyticsTemplateInventory{
 		Usage:        UsageLevelEnabled,
 		Version:      consts.GradleAnalyticsPluginDepVersion,
-		Endpoint:     consts.GradleAnalyticsEndpoint,
+		Endpoint:     common.ServicesURL(consts.GradleAnalyticsEndpoint, envs),
 		Port:         consts.GradleAnalyticsPort,
-		HTTPEndpoint: consts.GradleAnalyticsHTTPEndpoint,
-		GRPCEndpoint: consts.GradleAnalyticsGRPCEndpoint,
+		HTTPEndpoint: common.ServicesURL(consts.GradleAnalyticsHTTPEndpoint, envs),
+		GRPCEndpoint: common.ServicesURL(consts.GradleAnalyticsGRPCEndpoint, envs),
 	}
 }
 

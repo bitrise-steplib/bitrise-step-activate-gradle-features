@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/bitrise-io/go-utils/v2/log"
+
 	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/paths"
 	"github.com/bitrise-io/bitrise-build-cache-cli/v3/internal/utils"
 )
@@ -61,4 +63,69 @@ func FindMarker(startDir string, osProxy utils.OsProxy) (bool, string, error) {
 	}
 
 	return marker != nil, path, nil
+}
+
+// ProjectOptedOut reports whether the current project should be treated as
+// opted-out of analytics: machine ProjectMode is opt-in AND no project marker
+// is found walking up from the caller's cwd.
+//
+// Caller's cwd MUST be the project root. Daemons spawned via the
+// detached-spawn convention inherit the client's cwd (see
+// pkg/ccache/storage_helper.go) — safe to call from such daemons. Not safe
+// to call from long-lived daemons started independently of a build (e.g.
+// xcelerate proxy's Enricher) — they must resolve project dir separately.
+//
+// paths.Default / machineconfig.Read errors fail OPEN (returns false): if we
+// cannot resolve the machine config we assume opt-in is not in effect.
+// Getwd / FindMarker errors fail SILENT (returns true): opt-in is confirmed
+// active but we cannot prove the marker exists, so treat as opted-out.
+// Matches cmd/xcode.projectModeGates semantics.
+func ProjectOptedOut(osProxy utils.OsProxy, logger log.Logger) bool {
+	p, err := paths.Default()
+	if err != nil {
+		return false
+	}
+
+	current, err := Read(osProxy, p, logger)
+	if err != nil {
+		return false
+	}
+	if ResolvedProjectMode(current) != ModeOptIn {
+		return false
+	}
+
+	cwd, err := osProxy.Getwd()
+	if err != nil {
+		return true
+	}
+
+	found, _, err := FindMarker(cwd, osProxy)
+	if err != nil {
+		return true
+	}
+
+	return !found
+}
+
+// WriteMarkerIfMissing drops the marker file at dir unless a marker already
+// covers it (either at dir or any ancestor). On a fresh write it returns
+// (target, "", nil); when a marker already exists it returns ("", path, nil)
+// where path is the dir-level marker or an ancestor's. The existing file is
+// kept intact so any user-authored body is preserved.
+func WriteMarkerIfMissing(dir string, osProxy utils.OsProxy) (wrotePath string, alreadyCoveredBy string, err error) { //nolint:nonamedreturns // three same-typed returns benefit from labels
+	ancestor, marker, err := WalkUpFindMarker(dir, osProxy)
+	if err != nil {
+		return "", "", fmt.Errorf("walk up for marker: %w", err)
+	}
+
+	target := filepath.Join(dir, paths.ProjectMarkerFilename)
+	if marker != nil {
+		return "", ancestor, nil
+	}
+
+	if err := osProxy.WriteFile(target, []byte("{}\n"), 0o644); err != nil {
+		return "", "", fmt.Errorf("write marker %s: %w", target, err)
+	}
+
+	return target, "", nil
 }

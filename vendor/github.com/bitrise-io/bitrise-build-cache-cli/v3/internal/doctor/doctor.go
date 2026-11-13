@@ -24,6 +24,8 @@ const (
 	StateError State = "error"
 )
 
+const osDarwin = "darwin"
+
 type Fixer interface {
 	Fix() (detail string, err error)
 }
@@ -100,8 +102,11 @@ type Doctor struct {
 	// WorkspacePickPrompt selects a workspace for a login that has none. Nil
 	// leaves the fixer to point at the `auth workspace` commands instead.
 	WorkspacePickPrompt func() (workspaceID string, err error)
-	Now                 func() time.Time
-	Debug               bool
+	// ProjectScopePrompt confirms the one-off marker-write for the opt-in
+	// gate. Nil leaves the fixer to point at `project enable` instead.
+	ProjectScopePrompt func(dir string) (confirmed bool, err error)
+	Now                func() time.Time
+	Debug              bool
 	// LazyXcelerateProxy treats a missing proxy socket as idle instead of a
 	// warning. The standalone `doctor` command sets it; the xcodebuild wrapper
 	// gate leaves it false — it starts the proxy before running the checks, so
@@ -274,6 +279,10 @@ func (d *Doctor) checks(opts Options) []Check {
 	checks = append(checks,
 		d.xcelerateProxyCheck(),
 		d.xcelerateWrapperPathCheck(),
+		d.xcodeAppCheck(),
+		d.xcodeToolchainCheck(),
+		d.xcodeToolchainAnchorCheck(),
+		d.xcodeRecentBuildCheck(),
 		d.enrichmentCheck(),
 		d.ccacheHelperCheck(),
 		d.ccacheBinaryCheck(),

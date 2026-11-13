@@ -5,11 +5,13 @@ package blobstats
 import (
 	"fmt"
 	"math"
+	"reflect"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/dustin/go-humanize"
 )
 
@@ -78,6 +80,121 @@ type DirectionSnapshot struct {
 
 func (s DirectionSnapshot) IsEmpty() bool {
 	return s.OpCount == 0 && s.ErrorCount == 0 && s.MissCount == 0 && s.SkippedAlreadySavedCount == 0
+}
+
+// MergeDirectionSnapshots sums the counters, latency / size / throughput
+// histograms and retained min/max/sum of two DirectionSnapshots. Throughput
+// p10/p50/p90 are re-derived from the merged throughput histogram's bucket
+// bounds — raw per-sample throughput does not survive serialisation, so a
+// cross-sidecar merge accepts bucket-granular percentiles.
+//
+// Boundary-mismatch fallback: when the two sides disagree on histogram
+// boundaries, the b-side histogram contribution is dropped and a Debug line
+// is emitted (the callers of this API pin the boundary set at compile time,
+// so this path should never fire in practice). Counters still sum in that
+// case. Passing a nil logger silences the diagnostic.
+func MergeDirectionSnapshots(a, b DirectionSnapshot, logger log.Logger) DirectionSnapshot {
+	merged := DirectionSnapshot{
+		OpCount:                  a.OpCount + b.OpCount,
+		ErrorCount:               a.ErrorCount + b.ErrorCount,
+		MissCount:                a.MissCount + b.MissCount,
+		SkippedAlreadySavedCount: a.SkippedAlreadySavedCount + b.SkippedAlreadySavedCount,
+		BytesTotal:               a.BytesTotal + b.BytesTotal,
+		LatencyMs:                mergeHistogramSnapshots(a.LatencyMs, b.LatencyMs, logger),
+		SizeBytes:                mergeHistogramSnapshots(a.SizeBytes, b.SizeBytes, logger),
+	}
+
+	throughputHist := mergeHistogramSnapshots(a.Throughput.Histogram, b.Throughput.Histogram, logger)
+	p10, _ := throughputHist.PercentileBucket(0.10)
+	p50, _ := throughputHist.PercentileBucket(0.50)
+	p90, _ := throughputHist.PercentileBucket(0.90)
+
+	minBlob := a.Throughput.MinBlobBytes
+	if minBlob == 0 {
+		minBlob = b.Throughput.MinBlobBytes
+	}
+	merged.Throughput = ThroughputSnapshot{
+		Histogram:        throughputHist,
+		P10BytesPerSec:   p10,
+		P50BytesPerSec:   p50,
+		P90BytesPerSec:   p90,
+		MinBlobBytes:     minBlob,
+		ExcludedSmallOps: a.Throughput.ExcludedSmallOps + b.Throughput.ExcludedSmallOps,
+	}
+
+	return merged
+}
+
+// mergeHistogramSnapshots sums counts / Count / Sum and extends min/max from
+// two HistogramSnapshots that share a boundary set. When boundaries disagree,
+// the b-side contribution is dropped and a Debug diagnostic is emitted. This
+// path should not fire in practice — every caller pins boundaries at compile
+// time via the package-level LatencyMsBuckets / SizeBytesBuckets /
+// ThroughputBytesPerSecBuckets.
+func mergeHistogramSnapshots(a, b HistogramSnapshot, logger log.Logger) HistogramSnapshot {
+	if a.Count == 0 && b.Count == 0 && len(a.Boundaries) == 0 && len(b.Boundaries) == 0 {
+		return HistogramSnapshot{}
+	}
+
+	if len(a.Boundaries) == 0 {
+		return cloneHistogramSnapshot(b)
+	}
+	if len(b.Boundaries) == 0 {
+		return cloneHistogramSnapshot(a)
+	}
+
+	if !reflect.DeepEqual(a.Boundaries, b.Boundaries) {
+		if logger != nil {
+			logger.Debugf("blobstats: histogram boundary mismatch on merge; dropping b-side histogram contribution")
+		}
+
+		return cloneHistogramSnapshot(a)
+	}
+
+	counts := make([]int64, len(a.Counts))
+	for i := range counts {
+		counts[i] = a.Counts[i]
+		if i < len(b.Counts) {
+			counts[i] += b.Counts[i]
+		}
+	}
+
+	merged := HistogramSnapshot{
+		Boundaries: a.Boundaries,
+		Counts:     counts,
+		Count:      a.Count + b.Count,
+		Sum:        a.Sum + b.Sum,
+	}
+
+	switch {
+	case a.Count == 0:
+		merged.Min, merged.Max = b.Min, b.Max
+	case b.Count == 0:
+		merged.Min, merged.Max = a.Min, a.Max
+	default:
+		merged.Min = min(a.Min, b.Min)
+		merged.Max = max(a.Max, b.Max)
+	}
+
+	return merged
+}
+
+func cloneHistogramSnapshot(h HistogramSnapshot) HistogramSnapshot {
+	if len(h.Counts) == 0 && len(h.Boundaries) == 0 {
+		return HistogramSnapshot{}
+	}
+
+	counts := make([]int64, len(h.Counts))
+	copy(counts, h.Counts)
+
+	return HistogramSnapshot{
+		Boundaries: h.Boundaries,
+		Counts:     counts,
+		Count:      h.Count,
+		Sum:        h.Sum,
+		Min:        h.Min,
+		Max:        h.Max,
+	}
 }
 
 type Snapshot struct {
@@ -232,6 +349,64 @@ func (c *ProtocolCollector) Snapshot() Snapshot {
 	}
 }
 
+// Reset zeroes both CAS and KV collectors. Used by callers that window the
+// stats per bucket (e.g. the wrapperless pipeline's allocator): Snapshot + Reset
+// yields the delta since the previous Reset. Safe on a nil receiver.
+func (c *ProtocolCollector) Reset() {
+	if c == nil {
+		return
+	}
+
+	c.CAS.Upload.reset()
+	c.CAS.Download.reset()
+	c.KV.Upload.reset()
+	c.KV.Download.reset()
+}
+
+// TakeSnapshot atomically snapshots and resets both CAS and KV recorders.
+// Mirrors Collector.TakeSnapshot for the two-protocol shape: an RPC that
+// slots in while the lock is held gets its bytes into the returned snapshot
+// OR into the post-reset window — never dropped between the two calls.
+//
+// All four recorder locks are held across the snapshot build and reset,
+// taken CAS-first / Upload-before-Download to match mergeDirections' order
+// so no peer function can deadlock against this one. Safe on a nil receiver.
+func (c *ProtocolCollector) TakeSnapshot() Snapshot {
+	if c == nil {
+		return Snapshot{SchemaVersion: SchemaVersion} //nolint:exhaustruct // zeroed directions
+	}
+
+	c.CAS.Upload.mu.Lock()
+	defer c.CAS.Upload.mu.Unlock()
+	c.CAS.Download.mu.Lock()
+	defer c.CAS.Download.mu.Unlock()
+	c.KV.Upload.mu.Lock()
+	defer c.KV.Upload.mu.Unlock()
+	c.KV.Download.mu.Lock()
+	defer c.KV.Download.mu.Unlock()
+
+	casUp := c.CAS.Upload.snapshotLocked()
+	casDown := c.CAS.Download.snapshotLocked()
+	kvUp := c.KV.Upload.snapshotLocked()
+	kvDown := c.KV.Download.snapshotLocked()
+
+	snap := Snapshot{
+		SchemaVersion: SchemaVersion,
+		// From the retained samples, not the four snapshots: averaging would not be exact.
+		Upload:   mergeDirectionsLocked(c.CAS.Upload, c.KV.Upload),
+		Download: mergeDirectionsLocked(c.CAS.Download, c.KV.Download),
+		CAS:      &ProtocolSnapshot{Upload: casUp, Download: casDown},
+		KV:       &ProtocolSnapshot{Upload: kvUp, Download: kvDown},
+	}
+
+	c.CAS.Upload.resetLocked()
+	c.CAS.Download.resetLocked()
+	c.KV.Upload.resetLocked()
+	c.KV.Download.resetLocked()
+
+	return snap
+}
+
 // One lock keeps a snapshot from catching the counters and the histograms disagreeing.
 type Recorder struct {
 	mu         sync.Mutex
@@ -303,6 +478,13 @@ func (r *Recorder) Snapshot() DirectionSnapshot {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
+	return r.snapshotLocked()
+}
+
+// snapshotLocked builds the direction snapshot assuming r.mu is already held.
+// Separated so ProtocolCollector.TakeSnapshot can snapshot + reset all four
+// recorders under one locked window without re-acquiring each mu.
+func (r *Recorder) snapshotLocked() DirectionSnapshot {
 	sorted := make([]int64, len(r.throughputSamples))
 	copy(sorted, r.throughputSamples)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i] < sorted[j] })
@@ -337,6 +519,14 @@ func mergeDirections(first, second *Recorder) DirectionSnapshot {
 	second.mu.Lock()
 	defer second.mu.Unlock()
 
+	return mergeDirectionsLocked(first, second)
+}
+
+// mergeDirectionsLocked assumes both recorder mutexes are already held and
+// reads directly from the private fields. Shared with TakeSnapshot so the
+// merged + per-protocol views in one atomic snapshot cost two locks per
+// recorder, not four.
+func mergeDirectionsLocked(first, second *Recorder) DirectionSnapshot {
 	samples := make([]int64, 0, len(first.throughputSamples)+len(second.throughputSamples))
 	samples = append(samples, first.throughputSamples...)
 	samples = append(samples, second.throughputSamples...)
@@ -425,6 +615,14 @@ func (r *Recorder) reset() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
+	r.resetLocked()
+}
+
+// resetLocked zeroes every counter + histogram under the caller-held lock.
+// Shared with TakeSnapshot so snapshot + reset happens inside a single
+// locked region, preventing a concurrent RecordTransfer between the two
+// from having its bytes snapshotted and then zeroed.
+func (r *Recorder) resetLocked() {
 	r.latency = histogram{}    //nolint:exhaustruct // zero value is the empty histogram
 	r.size = histogram{}       //nolint:exhaustruct // zero value is the empty histogram
 	r.throughput = histogram{} //nolint:exhaustruct // zero value is the empty histogram
